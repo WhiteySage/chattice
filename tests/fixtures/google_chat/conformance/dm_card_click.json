@@ -1,0 +1,29 @@
+{
+  "type": "CARD_CLICKED",
+  "eventTime": "2026-08-16T15:05:00Z",
+  "user": {
+    "name": "users/123",
+    "type": "HUMAN"
+  },
+  "space": {
+    "name": "spaces/DM",
+    "type": "DM",
+    "spaceType": "DIRECT_MESSAGE",
+    "singleUserBotDm": true
+  },
+  "message": {
+    "name": "spaces/DM/messages/CARD",
+    "sender": {
+      "name": "users/app",
+      "type": "BOT"
+    },
+    "space": {
+      "name": "spaces/DM",
+      "spaceType": "DIRECT_MESSAGE",
+      "singleUserBotDm": true
+    }
+  },
+  "common": {
+    "invokedFunction": "dm.advance"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "type": "WIDGET_UPDATED",
+  "space": {"name": "spaces/AAA"},
+  "common": {
+    "invokedFunction": "search.contacts",
+    "parameters": {"autocomplete_widget_query": "Kai"}
+  }
+}

@@ -1,0 +1,40 @@
+name: TestPyPI smoke
+
+# Optional manual gate for a pre-release sanity check: build once,
+# publish the EXACT artifacts to TestPyPI via Trusted Publishing, then
+# install from TestPyPI into a fresh environment and smoke-test.
+# Run from the Actions tab (workflow_dispatch). Never runs automatically.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  publish-and-smoke:
+    runs-on: ubuntu-latest
+    environment: testpypi
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          python-version: "3.11"
+          enable-cache: true
+      - run: uv sync --all-groups --locked
+      - run: uv run ruff check .
+      - run: uv run pytest -q
+      - run: uv build
+      - name: Publish to TestPyPI (OIDC Trusted Publishing)
+        run: uv publish --trusted-publishing always --publish-url https://test.pypi.org/legacy/
+      - name: Install from TestPyPI and smoke
+        run: |
+          VERSION=$(uv run python -c "import tomllib;print(tomllib.load(open('pyproject.toml','rb'))['project']['version'])")
+          uv venv /tmp/testpypi-smoke
+          uv pip install --python /tmp/testpypi-smoke/bin/python \
+            --index-url https://test.pypi.org/simple/ \
+            --extra-index-url https://pypi.org/simple/ \
+            "chattice==$VERSION"
+          /tmp/testpypi-smoke/bin/python -c "import chattice; print('TestPyPI smoke OK', chattice.__version__)"

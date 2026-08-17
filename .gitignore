@@ -1,0 +1,33 @@
+.venv/
+.coverage
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+__pycache__/
+*.py[cod]
+build/
+dist/
+site/
+*.egg-info/
+.DS_Store
+
+.coverage*
+
+# Local development credentials (dogfood service-account keys)
+.secrets/
+
+# Internal maintainer material — never part of the public tree.
+.agent/
+AGENTS.md
+docs/superpowers/
+docs/audits/
+docs/reviews/
+docs/research/
+docs/agents/
+docs/architecture/ai-boundary.md
+docs/architecture/post-phase-12-charter.md
+docs/policies.md
+
+# macOS iCloud synchronization artifacts ("name 2.ext" duplicates).
+* 2.*
+docs/dx-review-phase6.md

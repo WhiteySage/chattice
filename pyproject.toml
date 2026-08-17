@@ -1,0 +1,131 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "chattice"
+version = "0.14.0b3"
+description = "Async typed event framework for Google Chat apps"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+authors = [{ name = "chattice contributors" }]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Framework :: AsyncIO",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Typing :: Typed",
+]
+dependencies = [
+  "google-apps-chat>=0.10.4,<1.0.0",
+  "google-auth>=2.30,<3",
+  "pydantic>=2.10,<3.0",
+]
+
+[project.urls]
+Documentation = "https://whiteysage.github.io/chattice/"
+Source = "https://github.com/WhiteySage/chattice"
+Issues = "https://github.com/WhiteySage/chattice/issues"
+Changelog = "https://github.com/WhiteySage/chattice/blob/main/CHANGELOG.md"
+
+[project.optional-dependencies]
+fastapi = [
+  "fastapi>=0.115,<1",
+]
+redis = [
+  "redis>=5,<7",
+]
+gemini = [
+  "google-genai>=1,<3",
+]
+pubsub = [
+    "google-cloud-pubsub>=2.21,<3",
+]
+
+[dependency-groups]
+dev = [
+  "cryptography>=43,<46",
+  "fakeredis>=2.20,<4",
+  "fastapi>=0.115,<1",
+  "google-cloud-pubsub>=2.21,<3",
+  "google-genai>=1,<3",
+  "httpx>=0.27,<1",
+  "mkdocstrings[python]>=1.0.6",
+  "mypy>=1.15,<2",
+  "pyjwt>=2.9,<3",
+  "pytest>=8.3,<9",
+  "pytest-asyncio>=0.25,<2",
+  "pytest-cov>=6,<8",
+  "ruff>=0.11,<1",
+  "uvicorn>=0.30,<1",
+]
+docs = [
+  "mkdocs>=1.6,<2",
+  "mkdocs-material>=9.6,<10",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/chattice"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"THIRD_PARTY_NOTICES.md" = "THIRD_PARTY_NOTICES.md"
+
+[tool.hatch.build.targets.sdist]
+# Release artifacts never ship internal maintainer material: agent
+# plans, audit/review/reconciliation records, internal research.
+# Tests and canonical examples are release assets; public docs stay
+# because they are legitimate source for the docs site.
+exclude = [
+  ".agent/",
+  "docs/audits/",
+  "docs/reviews/",
+  "docs/research/",
+  "docs/superpowers/",
+  "docs/dx-review-phase6.md",
+  "site/",
+  "dist/",
+  ".venv/",
+  ".git/",
+  ".github/",
+  ".mypy_cache/",
+  ".pytest_cache/",
+  ".ruff_cache/",
+]
+
+[tool.pytest.ini_options]
+addopts = "--strict-config --strict-markers -ra --ignore-glob='* 2.*'"
+asyncio_mode = "auto"
+testpaths = ["tests"]
+pythonpath = ["src", "."]
+markers = [
+  "google_live: tests requiring explicit Google credentials and live services",
+]
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "ASYNC", "RUF"]
+
+[tool.ruff.format]
+docstring-code-format = true
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+files = ["src", "tests"]
+warn_unreachable = true
+
+[tool.coverage.run]
+branch = true
+source = ["chattice"]
+
+[tool.coverage.report]
+fail_under = 90
+show_missing = true
+skip_covered = true

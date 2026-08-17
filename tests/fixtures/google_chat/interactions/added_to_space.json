@@ -1,0 +1,5 @@
+{
+  "type": "ADDED_TO_SPACE",
+  "user": {"name": "users/123", "displayName": "Ada"},
+  "space": {"name": "spaces/AAA", "displayName": "Deployments", "type": "ROOM"}
+}

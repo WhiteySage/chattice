@@ -1,0 +1,52 @@
+# Chattice
+
+> Async, typed event framework for Google Chat apps — aiogram-quality
+> DX, Google-native semantics. Public beta documentation.
+
+- [Home](index): Home
+- [Installation](getting-started/installation): Installation
+- [5-minute Quickstart](getting-started/quickstart): 5-minute Quickstart
+- [Configure Google Chat](getting-started/google-chat-setup): Configure Google Chat
+- [Authentication](getting-started/authentication): Authentication
+- [First deployment](getting-started/first-deployment): First deployment
+- [Project structure](getting-started/project-structure): Project structure
+- [Space → Thread → Message](concepts/mental-model): Space → Thread → Message
+- [Messages & Threads](guides/messages): Messages & Threads
+- [Native commands](guides/commands): Native commands
+- [Cards, Forms & Dialogs](guides/cards-forms-dialogs): Cards, Forms & Dialogs
+- [Routing & State](guides/routing-state): Routing & State
+- [Workspace Events](guides/workspace-events): Workspace Events
+- [HTTP vs Pub/Sub](guides/transports): HTTP vs Pub/Sub
+- [Auth & Capabilities](guides/auth-capabilities): Auth & Capabilities
+- [Advanced Google APIs](guides/advanced-apis): Advanced Google APIs
+- [Production & deployment](guides/deployment): Production & deployment
+- [Enterprise patterns](guides/enterprise): Enterprise patterns
+- [Examples](examples): Examples
+- [Cookbook](cookbook/recipes): Cookbook
+- [If you know aiogram](aiogram-comparison): If you know aiogram
+- [Common mistakes](common-mistakes): Common mistakes
+- [Troubleshooting](troubleshooting): Troubleshooting
+- [Stability](stability): Stability
+- [API Reference](api): API Reference
+- [Public API inventory](public-api): Public API inventory
+- [Google API mapping](reference/google-api-mapping): Google API mapping
+- [Auth/capability matrix](architecture/capabilities): Auth/capability matrix
+- [Compatibility revision](reference/compatibility): Compatibility revision
+- [Policies](policies): Policies
+- [Overview](architecture/overview): Overview
+- [Event model](architecture/event-model): Event model
+- [Dispatcher and Router](architecture/dispatcher-router): Dispatcher and Router
+- [Middleware](architecture/middleware): Middleware
+- [Dependency injection](architecture/dependency-injection): Dependency injection
+- [Transports](architecture/transports): Transports
+- [HTTP transport](architecture/http-transport): HTTP transport
+- [Bot API client](architecture/bot-api-client): Bot API client
+- [Authentication](architecture/authentication): Authentication
+- [Cards](architecture/cards): Cards
+- [Dialogs & App Home](architecture/dialogs-app-home): Dialogs & App Home
+- [FSM](architecture/fsm): FSM
+- [Workspace Events](architecture/workspace-events): Workspace Events
+- [Reliability](architecture/reliability): Reliability
+- [Observability](architecture/observability): Observability
+- [Security](architecture/security): Security
+- [Testing](architecture/testing): Testing

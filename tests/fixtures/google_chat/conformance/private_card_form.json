@@ -1,0 +1,37 @@
+{
+  "type": "CARD_CLICKED",
+  "eventTime": "2026-08-16T15:02:00Z",
+  "user": {
+    "name": "users/123",
+    "type": "HUMAN"
+  },
+  "space": {
+    "name": "spaces/TEAM",
+    "type": "ROOM",
+    "spaceType": "SPACE"
+  },
+  "message": {
+    "name": "spaces/TEAM/messages/PRIVATE",
+    "sender": {
+      "name": "users/app",
+      "type": "BOT"
+    },
+    "space": {
+      "name": "spaces/TEAM",
+      "spaceType": "SPACE"
+    },
+    "privateMessageViewer": {
+      "name": "users/123"
+    }
+  },
+  "common": {
+    "invokedFunction": "personal.submit",
+    "formInputs": {
+      "decision": {
+        "stringInputs": {
+          "value": ["approve"]
+        }
+      }
+    }
+  }
+}

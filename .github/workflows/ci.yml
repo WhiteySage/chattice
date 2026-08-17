@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          python-version: ${{ matrix.python-version }}
+          enable-cache: true
+      - run: uv sync --all-groups --locked
+      - run: uv run ruff check .
+      - run: uv run ruff format --check .
+      - run: uv run pytest --cov=chattice --cov-report=term-missing
+      - run: uv run mypy src tests
+      - run: uv run python scripts/gen_llms_txt.py
+      - run: uv run mkdocs build --strict
+      - run: uv run python -m compileall -q src tests examples
+      - run: uv build
+      - name: Inspect wheel contents
+        run: |
+          uv run python - <<'PY'
+          import zipfile, sys
+          wheel = [p for p in __import__("glob").glob("dist/*.whl") if " 2." not in p and " 3." not in p][0]
+          names = zipfile.ZipFile(wheel).namelist()
+          forbidden = ("docs/", "tests/", "examples/", ".agent", "site/", "audits", "reviews")
+          bad = [n for n in names if any(k in n for k in forbidden)]
+          assert not bad, f"wheel contains forbidden content: {bad}"
+          assert any(n.endswith("dist-info/METADATA") for n in names)
+          print(f"wheel inspection OK: {len(names)} files, no forbidden content")
+          PY
+      - run: bash scripts/verify_package.sh
+
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          python-version: "3.11"
+          enable-cache: true
+      - run: uv sync --all-groups --locked
+      - run: uv run pytest -q tests/test_documentation_examples.py
+      - run: uv run ruff check examples/docs tests/test_documentation_examples.py
+      - run: uv run ruff format --check examples/docs tests/test_documentation_examples.py
+      - run: uv run python -m compileall -q examples/docs
+      - run: uv run mkdocs build --strict

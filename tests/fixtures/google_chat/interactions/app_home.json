@@ -1,0 +1,7 @@
+{
+  "chat": {
+    "type": "APP_HOME",
+    "user": {"name": "users/123"},
+    "space": {"name": "spaces/DM"}
+  }
+}

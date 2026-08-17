@@ -1,0 +1,21 @@
+{
+  "type": "MESSAGE",
+  "eventTime": "2026-08-15T10:00:00Z",
+  "user": {
+    "name": "users/123"
+  },
+  "space": {
+    "name": "spaces/AAA"
+  },
+  "message": {
+    "name": "spaces/AAA/messages/2",
+    "text": "https://example.com/ticket/42",
+    "matchedUrl": {
+      "url": "https://example.com/ticket/42"
+    },
+    "sender": {
+      "name": "users/123",
+      "type": "HUMAN"
+    }
+  }
+}

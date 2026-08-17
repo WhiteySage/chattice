@@ -1,0 +1,5 @@
+{
+  "type": "SOME_FUTURE_GOOGLE_EVENT",
+  "eventTime": "2026-08-13T12:37:00+00:00",
+  "future": {"kept": true}
+}

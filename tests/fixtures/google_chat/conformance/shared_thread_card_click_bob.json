@@ -1,0 +1,30 @@
+{
+  "type": "CARD_CLICKED",
+  "eventTime": "2026-08-16T15:04:00Z",
+  "user": {
+    "name": "users/bob",
+    "type": "HUMAN"
+  },
+  "space": {
+    "name": "spaces/TEAM",
+    "type": "ROOM",
+    "spaceType": "SPACE"
+  },
+  "message": {
+    "name": "spaces/TEAM/messages/SHARED",
+    "sender": {
+      "name": "users/app",
+      "type": "BOT"
+    },
+    "space": {
+      "name": "spaces/TEAM",
+      "spaceType": "SPACE"
+    },
+    "thread": {
+      "name": "spaces/TEAM/threads/WORKFLOW"
+    }
+  },
+  "common": {
+    "invokedFunction": "shared.vote"
+  }
+}

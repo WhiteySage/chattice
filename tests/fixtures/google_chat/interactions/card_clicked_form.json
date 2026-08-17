@@ -1,0 +1,14 @@
+{
+  "type": "CARD_CLICKED",
+  "common": {
+    "invokedFunction": "contact.submit",
+    "parameters": {"source": "card"},
+    "formInputs": {
+      "contactName": {"stringInputs": {"value": ["Kai O"]}},
+      "contactTypes": {"stringInputs": {"value": ["Personal", "Work"]}},
+      "contactBirthdate": {"dateInput": {"msSinceEpoch": 1000425600000}},
+      "appointment": {"dateTimeInput": {"msSinceEpoch": "1786638600000", "hasDate": true, "hasTime": true}},
+      "reminder": {"timeInput": {"hours": 9, "minutes": 30}}
+    }
+  }
+}

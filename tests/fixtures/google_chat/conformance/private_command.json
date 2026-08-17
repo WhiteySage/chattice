@@ -1,0 +1,21 @@
+{
+  "type": "APP_COMMAND",
+  "eventTime": "2026-08-16T15:00:00Z",
+  "message": {
+    "name": "spaces/TEAM/messages/COMMAND",
+    "text": "/personal"
+  },
+  "user": {
+    "name": "users/123",
+    "type": "HUMAN"
+  },
+  "space": {
+    "name": "spaces/TEAM",
+    "type": "ROOM",
+    "spaceType": "SPACE"
+  },
+  "appCommandMetadata": {
+    "appCommandId": 7,
+    "appCommandType": "QUICK_COMMAND"
+  }
+}

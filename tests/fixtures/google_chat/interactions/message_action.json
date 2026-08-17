@@ -1,0 +1,15 @@
+{
+  "type": "APP_COMMAND",
+  "eventTime": "2026-08-16T10:00:00Z",
+  "message": {
+    "name": "spaces/AAA/messages/TARGET",
+    "text": "Remember this decision",
+    "sender": {"name": "users/456", "type": "HUMAN"}
+  },
+  "user": {"name": "users/123"},
+  "space": {"name": "spaces/AAA"},
+  "appCommandMetadata": {
+    "appCommandId": 7,
+    "appCommandType": "MESSAGE_ACTION"
+  }
+}

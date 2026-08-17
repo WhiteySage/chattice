@@ -1,0 +1,37 @@
+{
+  "type": "CARD_CLICKED",
+  "eventTime": "2026-08-15T10:00:00Z",
+  "user": {
+    "name": "users/123"
+  },
+  "space": {
+    "name": "spaces/AAA"
+  },
+  "message": {
+    "name": "spaces/AAA/messages/CARD",
+    "sender": {
+      "name": "users/123",
+      "type": "HUMAN"
+    }
+  },
+  "action": {
+    "actionMethodName": "deploy.confirm",
+    "parameters": [
+      {
+        "key": "env",
+        "value": "prod"
+      }
+    ]
+  },
+  "common": {
+    "invokedFunction": "deploy.confirm",
+    "parameters": {
+      "env": "prod"
+    },
+    "userLocale": "en-US",
+    "timeZone": {
+      "id": "America/Los_Angeles",
+      "offset": -25200000
+    }
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "chat": {
+    "type": "SUBMIT_FORM",
+    "user": {"name": "users/123"},
+    "space": {"name": "spaces/DM"}
+  },
+  "commonEventObject": {
+    "invokedFunction": "update_app_home",
+    "parameters": {"section": "profile"},
+    "formInputs": {"displayName": {"stringInputs": {"value": ["Ada"]}}}
+  }
+}

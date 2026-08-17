@@ -1,0 +1,69 @@
+site_name: Chattice
+site_description: Chattice — async Python framework for Google Chat apps
+theme:
+  name: material
+  features:
+    - navigation.indexes
+    - navigation.sections
+    - navigation.top
+    - search.highlight
+    - search.suggest
+plugins:
+  - search
+  - mkdocstrings
+markdown_extensions:
+  - admonition
+  - pymdownx.superfences
+nav:
+  - Home: index.md
+  - Getting Started:
+      - Installation: getting-started/installation.md
+      - 5-minute Quickstart: getting-started/quickstart.md
+      - Configure Google Chat: getting-started/google-chat-setup.md
+      - Authentication: getting-started/authentication.md
+      - First deployment: getting-started/first-deployment.md
+      - Project structure: getting-started/project-structure.md
+  - Mental Model:
+      - Space → Thread → Message: concepts/mental-model.md
+  - Task Guides:
+      - Messages & Threads: guides/messages.md
+      - Native commands: guides/commands.md
+      - Cards, Forms & Dialogs: guides/cards-forms-dialogs.md
+      - Routing & State: guides/routing-state.md
+      - Workspace Events: guides/workspace-events.md
+      - HTTP vs Pub/Sub: guides/transports.md
+      - Auth & Capabilities: guides/auth-capabilities.md
+      - Advanced Google APIs: guides/advanced-apis.md
+      - Production & deployment: guides/deployment.md
+      - Enterprise patterns: guides/enterprise.md
+  - Examples: examples.md
+  - Cookbook: cookbook/recipes.md
+  - Migration & Help:
+      - If you know aiogram: aiogram-comparison.md
+      - Common mistakes: common-mistakes.md
+      - Troubleshooting: troubleshooting.md
+  - Stability: stability.md
+  - Reference:
+      - API Reference: api.md
+      - Public API inventory: public-api.md
+      - Google API mapping: reference/google-api-mapping.md
+      - Auth/capability matrix: architecture/capabilities.md
+      - Compatibility revision: reference/compatibility.md
+  - Architecture:
+      - Overview: architecture/overview.md
+      - Event model: architecture/event-model.md
+      - Dispatcher and Router: architecture/dispatcher-router.md
+      - Middleware: architecture/middleware.md
+      - Dependency injection: architecture/dependency-injection.md
+      - Transports: architecture/transports.md
+      - HTTP transport: architecture/http-transport.md
+      - Bot API client: architecture/bot-api-client.md
+      - Authentication: architecture/authentication.md
+      - Cards: architecture/cards.md
+      - Dialogs & App Home: architecture/dialogs-app-home.md
+      - FSM: architecture/fsm.md
+      - Workspace Events: architecture/workspace-events.md
+      - Reliability: architecture/reliability.md
+      - Observability: architecture/observability.md
+      - Security: architecture/security.md
+      - Testing: architecture/testing.md

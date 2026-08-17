@@ -1,0 +1,9 @@
+{
+  "type": "CARD_CLICKED",
+  "isDialogEvent": true,
+  "dialogEventType": "SUBMIT_DIALOG",
+  "common": {
+    "invokedFunction": "contact.submit",
+    "formInputs": {"contactName": {"stringInputs": {"value": ["Kai O"]}}}
+  }
+}

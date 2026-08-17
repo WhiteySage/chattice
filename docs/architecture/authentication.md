@@ -1,0 +1,109 @@
+# Authentication
+
+Phase 8 adds the outgoing credential providers that authorize a Chat app's
+Chat API calls. Incoming verification (Phase 3) is a separate concern with a
+separate interface — see [ADR-005](../adr/ADR-005-authentication-abstraction.md)
+and the verified Google auth facts.
+
+## Three separated modes
+
+Authentication appears in three places, and none of them share code:
+
+| Mode | Proves / authorizes | Where it lives |
+| --- | --- | --- |
+| Incoming verification | A delivery really came from Google Chat (HTTP 401 semantics) | `chattice.transports.http.GoogleTokenVerifier` / `MockVerifier` |
+| App credentials | A Chat app acting as itself on the Chat API | `chattice.auth.ServiceAccountCredentialsProvider` |
+| User credentials | Acting on behalf of a consenting user | `chattice.auth.UserCredentialsProvider` |
+
+Synchronous interaction responses and App Home render actions need no
+outgoing identity at all; that configuration is `AuthMode.NONE`. The webhook
+surface resolves exactly the incoming capability set (SYNC_RESPONSE +
+DIALOGS).
+
+## App authentication
+
+`ServiceAccountCredentialsProvider` produces the `google-auth` credentials the
+Bot uses for app-authenticated calls. The JSON file (or info mapping) is **not
+read at construction** — loading happens only when the provider is first
+called, i.e. at lazy client creation:
+
+```python
+from chattice.auth import ServiceAccountCredentialsProvider
+
+# File-based; the file is read lazily on the first call.
+provider = ServiceAccountCredentialsProvider.from_service_account_file(
+    "credentials.json",
+)
+
+# In-memory; handy for secret managers or tests. `info` is copied at
+# construction, so callers can mutate their mapping afterwards.
+provider = ServiceAccountCredentialsProvider.from_service_account_info(
+    {"type": "service_account", "client_email": "...", "private_key": "...", ...}
+)
+
+# Or hand over an already-built google-auth credentials object directly.
+provider = ServiceAccountCredentialsProvider(credentials=already_built)
+```
+
+The default scope is `CHAT_BOT_SCOPE` (`https://www.googleapis.com/auth/chat.bot`).
+It needs no admin approval and lets the app act as itself on resources it can
+access — the app must be a member of the space to act. Newer `chat.app.*`
+scopes (`chat.app.messages`, `chat.app.spaces`, ...) require a **one-time
+administrator approval** and are not a drop-in substitute; when you need one,
+pass it explicitly:
+
+```python
+provider = ServiceAccountCredentialsProvider.from_service_account_file(
+    "credentials.json",
+    scopes=["https://www.googleapis.com/auth/chat.app.messages"],
+)
+```
+
+## User authentication
+
+`UserCredentialsProvider` wraps google-auth authorized-user credentials —
+either a pre-built `Credentials` object or a token-info mapping. It is the
+provider for `AuthMode.USER`:
+
+```python
+from chattice.auth import UserCredentialsProvider
+
+# From a token-info mapping (app-owned storage), or pre-built credentials.
+provider = UserCredentialsProvider(token_info)
+```
+
+The provider refreshes **only when the credentials are expired**; a valid
+token is passed through untouched.
+
+### Domain-wide delegation is USER
+
+Domain-wide delegation (a service account with an impersonated `subject=`)
+acts as a user and is therefore `AuthMode.USER`, not a fourth mode. The
+`USER_IMPERSONATION` capability covers both OAuth-user identity and DWD.
+
+### useAdminAccess
+
+`useAdminAccess` is Google's separate administrator mode with its own
+per-method scope requirements. It is **documented only** in this phase — the
+framework does not plumb it through any request, so treat it as out of scope
+until a later phase takes it on.
+
+## Refresh contract
+
+- The provider is called **exactly once** by the SDK, at lazy client
+  creation (`Bot` caches the resolved credentials).
+- After that, token refreshes are handled **inside the SDK** (google-auth
+  refreshes transparently during gRPC calls); the application must not keep
+  re-invoking the provider.
+- `UserCredentialsProvider` with `refresh_before_call=True` (the default)
+  performs one synchronous refresh at that single call when the token has
+  expired — so the client is always constructed with valid credentials.
+
+## Token storage is application-owned
+
+The framework stores nothing. Token acquisition (OAuth consent flow, client
+ID per platform) and persistence (refresh/revocation) belong entirely to the
+application: the provider contract is a plain callable returning valid
+credentials, and the application decides where tokens live and how they are
+refreshed or revoked. Never put service-account JSON, access/refresh tokens,
+or authorization headers in reprs, logs, metrics, or exception messages.

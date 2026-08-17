@@ -1,0 +1,12 @@
+{
+  "type": "MESSAGE",
+  "eventTime": "2026-08-13T12:34:56.123456Z",
+  "message": {
+    "name": "spaces/AAA/messages/MSG",
+    "text": "ping",
+    "sender": {"name": "users/123", "displayName": "Ada", "type": "HUMAN"},
+    "space": {"name": "spaces/AAA", "displayName": "Deployments", "type": "ROOM"},
+    "thread": {"name": "spaces/AAA/threads/THR"}
+  },
+  "extraFutureField": {"kept": true}
+}

@@ -1,0 +1,16 @@
+{
+  "type": "CARD_CLICKED",
+  "eventTime": "2026-08-13T12:35:00Z",
+  "user": {"name": "users/123"},
+  "space": {"name": "spaces/AAA"},
+  "action": {
+    "actionMethodName": "deploy.confirm",
+    "parameters": [{"key": "environment", "value": "prod"}]
+  },
+  "common": {
+    "invokedFunction": "deploy.confirm",
+    "parameters": {"environment": "prod"},
+    "userLocale": "en-US",
+    "timeZone": {"id": "America/Los_Angeles", "offset": -25200000}
+  }
+}

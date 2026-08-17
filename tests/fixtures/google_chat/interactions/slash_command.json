@@ -1,0 +1,22 @@
+{
+  "type": "MESSAGE",
+  "eventTime": "2026-08-15T10:00:00Z",
+  "user": {
+    "name": "users/123"
+  },
+  "space": {
+    "name": "spaces/AAA"
+  },
+  "message": {
+    "name": "spaces/AAA/messages/1",
+    "argumentText": "deploy prod",
+    "text": "/deploy prod",
+    "slashCommand": {
+      "commandId": "42"
+    },
+    "sender": {
+      "name": "users/123",
+      "type": "HUMAN"
+    }
+  }
+}
