@@ -147,9 +147,7 @@ async def main() -> None:
     )
     dispatcher = Dispatcher(bot=bot)
     dispatcher.include_router(router)
-    await dispatcher.run_pubsub(
-        os.environ["GOOGLE_CHAT_SUBSCRIPTION"], bot=bot
-    )
+    await dispatcher.run_pubsub(os.environ["GOOGLE_CHAT_SUBSCRIPTION"], bot=bot)
 
 
 if __name__ == "__main__":
