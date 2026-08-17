@@ -8,7 +8,8 @@
 Development phases 2–15 shipped internal versions 0.2.0 → 0.13.0 (one
 minor per phase); 0.14.0 is the first public beta candidate. An earlier
 roadmap draft mentioned a public beta `0.9.0`. The current development
-version is `0.14.0`; the FIRST PUBLIC BETA ships as `0.14.0b1`
+version is `0.14.0`; the FIRST PUBLIC BETA ships as `0.14.0b3` (b1/b2 were
+pre-publication iterations)
 (pre-release suffix on the same sequence, no downgrade).
 
 ## Decision

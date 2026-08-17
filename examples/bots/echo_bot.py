@@ -6,7 +6,7 @@ through the injected `MockBot`, and `assert_message_sent` verifies the exact
 outgoing call — no raw Google JSON and no HTTP involved.
 
 Run:
-    uv run python examples/bots/echo_bot.py
+    python examples/bots/echo_bot.py
 """
 
 from __future__ import annotations

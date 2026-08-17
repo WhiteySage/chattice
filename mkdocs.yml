@@ -2,6 +2,8 @@ site_name: Chattice
 site_description: Chattice — async Python framework for Google Chat apps
 theme:
   name: material
+  logo: assets/brand/chattice-mark.png
+  favicon: assets/brand/favicon.png
   features:
     - navigation.indexes
     - navigation.sections

@@ -110,3 +110,98 @@ the SPACE after the stripped app mention — a Space message
 `argument_text=" ping"`. Strip before comparing
 (`(message.argument_text or "").strip() == "ping"`) — see
 `examples/smoke_http.py`.
+
+## The same skeleton, two transports
+
+Your aiogram echo bot:
+
+```python
+from aiogram import Bot, Dispatcher
+from aiogram.types import Message
+
+bot = Bot(token=TOKEN)
+dp = Dispatcher()
+
+
+@dp.message()
+async def echo(message: Message) -> None:
+    await message.answer(message.text)
+
+
+async def main() -> None:
+    await dp.start_polling(bot)
+```
+
+Chattice, **HTTP** (Google calls your HTTPS endpoint; the handler RETURN
+is the synchronous response):
+
+```python
+import os
+from fastapi import FastAPI
+from chattice import Dispatcher, Router
+from chattice.events import MessageEvent
+from chattice.integrations.fastapi import create_chat_router
+from chattice.transports.http import GoogleTokenVerifier
+
+router = Router()
+
+
+@router.message()
+async def echo(message: MessageEvent) -> str:
+    return f"You said: {message.text}"  # synchronous response, no auth
+
+
+dispatcher = Dispatcher()
+dispatcher.include_router(router)
+
+app = FastAPI()
+app.include_router(
+    create_chat_router(
+        dispatcher,
+        GoogleTokenVerifier(audience=os.environ["CHATTICE_AUDIENCE"]),
+    )
+)
+# python -m uvicorn app:app --port 8000
+```
+
+Chattice, **Pub/Sub streaming pull** (persistent runner, like
+`start_polling` in shape; no domain, no TLS):
+
+```python
+import asyncio
+import os
+from chattice import Dispatcher, Router
+from chattice.auth import ServiceAccountCredentialsProvider
+from chattice.client import Bot
+from chattice.events import MessageEvent
+
+router = Router()
+
+
+@router.message()
+async def echo(message: MessageEvent) -> None:
+    await message.reply(f"You said: {message.text}")  # no sync return on pull
+
+
+async def main() -> None:
+    bot = Bot(
+        credentials_provider=ServiceAccountCredentialsProvider.from_service_account_file(
+            os.environ["CHATTICE_SERVICE_ACCOUNT_FILE"]
+        )
+    )
+    dispatcher = Dispatcher(bot=bot)
+    dispatcher.include_router(router)
+    await dispatcher.run_pubsub(os.environ["GOOGLE_CHAT_SUBSCRIPTION"])
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
+# python app.py
+```
+
+Correspondences: `start_polling(bot)` ↔ `run_pubsub(subscription)` (the
+Bot binds at `Dispatcher(bot=...)` or `run_pubsub(..., bot=bot)`);
+aiogram webhook ↔ the HTTP variant above. Note: handlers always attach
+to a `Router`, then `dispatcher.include_router(router)` — `@dp.message()`
+does not exist on the Chattice Dispatcher.
+

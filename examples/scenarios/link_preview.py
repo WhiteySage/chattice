@@ -6,7 +6,7 @@ documented UPDATE_USER_MESSAGE_CARDS response (the serializer selects it
 from event.matched_url — never guessed).
 
 Run:
-    uv run python examples/scenarios/link_preview.py
+    python examples/scenarios/link_preview.py
 """
 
 from __future__ import annotations

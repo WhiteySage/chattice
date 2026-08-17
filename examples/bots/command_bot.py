@@ -10,7 +10,7 @@ normalizes BOTH into `CommandEvent`:
   Developer Preview type and needs explicit dispatcher enrollment).
 
 Run:
-    uv run python examples/bots/command_bot.py
+    python examples/bots/command_bot.py
 """
 
 from __future__ import annotations

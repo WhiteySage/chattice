@@ -14,12 +14,12 @@ Business services stay OUTSIDE the framework: FakeCRMClient is injected
 by name; a real client is swapped in production. Everything here runs
 without network. NOT production evidence: fixed identities, Memory
 storage, no Redis restart run, no idempotency/timeout path — a real
-deployment must add those (documented in the ExecPlan acceptance
+deployment must add those (documented in the acceptance
 answers). The employee field renders as a selection/text input because
-the typed external-data multiselect facade is still Phase 15 backlog.
+the typed external-data multiselect facade is still future work.
 
 Run:
-    uv run python examples/production/crm_workflow/main.py
+    python examples/production/crm_workflow/main.py
 """
 
 from __future__ import annotations

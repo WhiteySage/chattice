@@ -98,7 +98,7 @@ A handler returning a `Card`:
 
 `UPDATE_MESSAGE` is documented as «only permitted on a CARD_CLICKED event
 where the message sender type is BOT». Updating cards on human messages
-uses `UPDATE_USER_MESSAGE_CARDS` (implemented, Phase 14 — sender-derived:
+uses `UPDATE_USER_MESSAGE_CARDS` (implemented, sender-derived:
 BOT → UPDATE_MESSAGE, HUMAN → UPDATE_USER_MESSAGE_CARDS; a MESSAGE with
 a matched URL also updates via UPDATE_USER_MESSAGE_CARDS). Async card
 updates go through `bot.update_message`.

@@ -187,5 +187,5 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-The same workflow passes the phase gate on both `MemoryStorage` and
+The same workflow passes the CI gate on both `MemoryStorage` and
 `RedisStorage` (fakeredis) — `tests/fsm/test_gate.py`.

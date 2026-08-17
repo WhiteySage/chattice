@@ -3,10 +3,20 @@
 All notable changes will be documented here. The project follows Semantic
 Versioning after the first public release; pre-1.0 APIs may change.
 
+## [0.14.0b4] — 2026-08-17 — silent-miss diagnosis, redis hints, docs polish, upstream watch
+
+- FormFilter/ActionDataFilter log decode failures at DEBUG (silent-miss
+  diagnosis without changing filter semantics)
+- Redis storages raise a friendly 'install chattice[redis]' hint
+- deployment recipes, Pub/Sub console setup, cookbook recipes,
+  pytest example, aiogram side-by-side skeletons, README two-startup
+  block, brand assets
+- dependabot google groups, weekly upstream watcher, pip-audit in CI
+- removed committed iCloud duplicate files
+
 ## [0.14.0b3] — 2026-08-16 — pip-canonical docs, public examples cleaned, clean public history
 
-(b1/b2 were published; b3 ships the final pre-launch polish on a single
-clean public commit.)
+(b1/b2 were published; b3 ships the final pre-launch polish.)
 
 ## [0.14.0b2] — 2026-08-16 — README absolute docs links for PyPI
 
@@ -14,10 +24,10 @@ clean public commit.)
 
 ## [0.14.0b1] — 2026-08-16 — first public beta release
 
-(0.14.0 was the internal release candidate; the public beta ships as
+(0.14.0 was the pre-release candidate; the public beta ships as
 0.14.0b1 per ADR-011.)
 
-## [0.14.0] — 2026-08-15 — first public beta candidate
+## [0.14.0] — 2026-08-15 — public beta release
 
 ### Added
 

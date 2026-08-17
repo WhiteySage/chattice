@@ -76,3 +76,13 @@ backend or the revisioned `FSMRecordStorage` contract when state must survive
 processes; compare-and-set is the concurrency boundary.
 
 Next: [Workspace Events](workspace-events.md).
+
+## Per-user FSM vs shared-resource state
+
+FSM records scope per-user workflow state (USER / SPACE_USER / THREAD /
+SPACE keys). For state that is SHARED across participants — a workflow
+board, a shared card's votes, a team approval record — use your
+application database keyed by the resource, not FSM. Per-user FSM never
+changes how a shared Message renders; it only scopes each actor's
+backend state.
+

@@ -2,11 +2,11 @@
 
 The same flow as registration_fsm.py but Google-native: a single dialog
 collects ALL fields (name, email, department) in one interaction, the
-submit handler answers with an ActionStatus banner. Charter §15: forms
+submit handler answers with an ActionStatus banner. Forms
 collect data — no FSM state needed for a one-shot collection.
 
 Run:
-    uv run python examples/scenarios/registration_dialog.py
+    python examples/scenarios/registration_dialog.py
 """
 
 from __future__ import annotations

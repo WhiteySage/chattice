@@ -3,7 +3,7 @@
 The aiogram-developer bread-and-butter, kept extremely simple.
 
 Run:
-    uv run python examples/scenarios/text_triggers.py
+    python examples/scenarios/text_triggers.py
 """
 
 from __future__ import annotations

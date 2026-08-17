@@ -1,6 +1,6 @@
 # Workspace Events
 
-Status: **Implemented** (Phase 9, corrected in Phase 14 A1). Workspace
+Status: **Implemented** (introduced in 0.11.0, hardened in 0.14.0). Workspace
 Events deliver resource-change notifications (NOT Chat interactions) as
 CloudEvents through Pub/Sub push. They have an independent
 `EventsRouter`/`EventsDispatcher` runtime; `WorkspaceEvent` is deliberately

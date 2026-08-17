@@ -26,6 +26,7 @@ jobs:
       - run: uv run ruff format --check .
       - run: uv run pytest --cov=chattice --cov-report=term-missing
       - run: uv run mypy src tests
+      - run: uv run pip-audit
       - run: uv run python scripts/gen_llms_txt.py
       - run: uv run mkdocs build --strict
       - run: uv run python -m compileall -q src tests examples

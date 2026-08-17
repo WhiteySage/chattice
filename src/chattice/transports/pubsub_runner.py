@@ -1,4 +1,4 @@
-"""Streaming-pull Pub/Sub runner: the behind-VPN ingress (Stage B, B3).
+"""Streaming-pull Pub/Sub runner: the long-lived subscriber ingress.
 
 Feeds the SAME parser -> Dispatcher -> Router -> filters -> middleware ->
 DI -> handlers pipeline as the HTTP router — no second dispatcher.

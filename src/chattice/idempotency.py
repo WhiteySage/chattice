@@ -142,7 +142,13 @@ class RedisIdempotencyStorage:
         clock: Clock = time.time,
         completed_retention_seconds: float = 86400.0,
     ) -> None:
-        from redis import asyncio as aioredis
+        try:
+            from redis import asyncio as aioredis
+        except ImportError as error:
+            raise ImportError(
+                "Redis-backed storage requires the `chattice[redis]` extra "
+                "(pip install 'chattice[redis]')."
+            ) from error
 
         if redis is not None:
             self._redis = redis

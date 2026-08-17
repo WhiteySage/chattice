@@ -5,7 +5,7 @@ credentials. `tests/test_examples.py` and `tests/test_documentation_examples.py`
 execute them in CI, while `python -m compileall` and Ruff cover the entire
 directory.
 
-Start with the complete documentation acceptance journey:
+Start with the complete documented example:
 
 ```bash
 python examples/docs/from_zero.py

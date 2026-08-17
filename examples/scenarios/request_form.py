@@ -1,11 +1,11 @@
 """Request form: one interaction collects the whole request (Google-native).
 
-Charter §15: Forms collect data. A single dialog collects category,
+Forms collect data. A single dialog collects category,
 priority and details at once; the submit handler hands the typed
 RequestForm to the application. No FSM anywhere in this flow.
 
 Run:
-    uv run python examples/scenarios/request_form.py
+    python examples/scenarios/request_form.py
 """
 
 from __future__ import annotations

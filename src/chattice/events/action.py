@@ -32,7 +32,7 @@ class ActionEvent(Event):
     source: ActionSource | None = None
     # Message identity of the clicked card — HTTP responses do not need it
     # (Google knows the target), Pub/Sub answers need it for
-    # Bot.update_message. Added during the Stage B live dogfooding.
+    # Bot.update_message. Live-verified during development.
     message: MessageRef | None = None
 
     def __post_init__(self) -> None:

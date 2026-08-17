@@ -4,11 +4,28 @@ updates:
     directory: /
     schedule:
       interval: monthly
+    groups:
+      all:
+        patterns:
+          - "*"
+
   - package-ecosystem: pip
     directory: /
     schedule:
-      interval: monthly
+      interval: weekly
     groups:
+      # Google wire-layer SDKs are grouped separately: every update PR runs
+      # the full CI (test suite + golden fixtures) and is reviewed as an
+      # upstream-change, not a routine bump.
+      google-sdks:
+        patterns:
+          - "google-apps-chat"
+          - "google-apps-card"
+          - "google-cloud-pubsub"
+          - "google-genai"
+      google-auth:
+        patterns:
+          - "google-auth"
       all:
         patterns:
           - "*"

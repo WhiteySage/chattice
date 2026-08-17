@@ -101,3 +101,20 @@ can be retried. Read metadata such as `attachments`, `annotations`, `mentions`,
 Google mapping: `spaces.messages.create`, `get`, `update`, and `delete`.
 
 Next: [Native commands](commands.md).
+
+## Privacy model
+
+Four distinct Google surfaces, chosen explicitly by the application:
+
+| Surface | How | Visible to |
+| --- | --- | --- |
+| Shared Space message | `bot.send_message(space)` | everyone in the Space |
+| Thread reply | `bot.send_message(space, thread=...)` or `message.reply()` | the thread participants |
+| Private message | `bot.send_message(space, private_to=user)` | only `privateMessageViewer` (app auth required; no accessory widgets/attachments) |
+| DM | send into the direct-message Space | only you and the app |
+
+Dialogs are a separate synchronous surface: visible only to the opener,
+HTTP-only. App Home is the persistent personal surface (HTTP-only).
+Nothing is implicitly private and nothing implicitly becomes a Thread —
+the application chooses the surface per runtime capabilities.
+

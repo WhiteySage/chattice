@@ -1,12 +1,12 @@
 """Buttons bot: Card -> CARD_CLICKED -> @router.action() (no network).
 
 Builds a Card with a button list, derives the documented CARD_CLICKED
-payload from the serialized card itself (the Phase 5 gate pattern, mirroring
+payload from the serialized card itself (
 tests/cards/test_gate.py), and routes it into a named-action handler with its
 parameters intact.
 
 Run:
-    uv run python examples/bots/buttons_bot.py
+    python examples/bots/buttons_bot.py
 """
 
 from __future__ import annotations

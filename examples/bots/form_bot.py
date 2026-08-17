@@ -6,7 +6,7 @@ Shows the full form contract: the input declares client-side validation
 with an ActionStatus the Chat UI renders as a confirmation banner.
 
 Run:
-    uv run python examples/bots/form_bot.py
+    python examples/bots/form_bot.py
 """
 
 from __future__ import annotations

@@ -1,5 +1,9 @@
 # 5-minute Quickstart
 
+```bash
+python -m pip install "chattice[fastapi]" uvicorn
+```
+
 This app answers any Google Chat message synchronously. It uses the actual
 public API: `Dispatcher` is the application event engine, `Router` owns
 handlers, and the FastAPI integration exposes the HTTPS endpoint.
@@ -38,7 +42,11 @@ app.include_router(
 
 Returning a string is the synchronous response to the current interaction. It
 does not make a Chat API call and must complete within Google's interaction
-deadline. Outbound `Bot` calls are a separate, authenticated channel.
+deadline (30 seconds). Outbound `Bot` calls are a separate, authenticated
+channel.
+
+The webhook endpoint is mounted at the root path `/` by default; pass
+`path="..."` to `create_chat_router(...)` to serve it elsewhere.
 
 ## 2. Run it
 
@@ -55,10 +63,12 @@ uv run uvicorn app:app --host 0.0.0.0 --port 8000
 ```
 
 The endpoint must be publicly reachable over HTTPS before Google Chat can call
-it. For local development, use an HTTPS tunnel and set both the configuration
-URL and `CHATTICE_AUDIENCE` to that exact public URL. Never use `MockVerifier`
-on an endpoint reachable by Google or other users; it is only for isolated
-tests.
+it. For local development, use an HTTPS tunnel tool (ngrok, cloudflared, or
+similar) and set both the configuration URL and `CHATTICE_AUDIENCE` to that
+exact public URL. If you forget to export `CHATTICE_AUDIENCE`, the app fails at
+startup with `KeyError: 'CHATTICE_AUDIENCE'` — set the variable and run again.
+Never use `MockVerifier` on an endpoint reachable by Google or other users; it
+is only for isolated tests.
 
 ## 3. Configure and try it
 

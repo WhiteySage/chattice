@@ -114,3 +114,31 @@ Format: Symptom → Cause → Verify → Fix.
 - **Verify:** the error names the malformed Space reference.
 - **Fix:** pass `"AAA"` or `"spaces/AAA"` or a `SpaceRef`; resolve
   display names explicitly in application code.
+
+## A button "does nothing"
+
+Card actions route through `@router.action("name")`; typed forms and
+ActionData go through filters. If the incoming parameters or form values
+cannot decode into the declared model, the FILTER does not match and the
+handler is silently skipped (a filter mismatch is not an error). Enable
+the debug loggers to see the decode reason:
+
+```python
+import logging
+
+logging.getLogger("chattice.forms").setLevel(logging.DEBUG)
+logging.getLogger("chattice.actions").setLevel(logging.DEBUG)
+```
+
+Check that the widget names in the card match the model field names
+exactly, and that the Google interaction actually carries
+`common.formInputs` / action parameters.
+
+## ImportError: No module named 'redis'
+
+Redis-backed storages require the optional extra:
+
+```bash
+pip install "chattice[redis]"
+```
+

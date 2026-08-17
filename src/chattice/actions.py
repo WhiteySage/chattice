@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import dataclasses
 import enum
+import logging
 import math
 import types
 from collections.abc import Mapping
@@ -38,6 +39,8 @@ from typing import (
 
 from chattice.events import ActionEvent, Event
 from chattice.filters import FilterValue
+
+_logger = logging.getLogger("chattice.actions")
 
 __all__ = ["ActionData", "ActionDataDecodeError", "ActionDataFilter"]
 
@@ -210,6 +213,11 @@ class ActionDataFilter:
         }
         try:
             instance = self.model.from_parameters(parameters)
-        except ActionDataDecodeError:
+        except ActionDataDecodeError as error:
+            _logger.debug(
+                "action data decode failed for %s: %s",
+                self.model.__name__,
+                error,
+            )
             return False
         return {"data": instance}

@@ -9,10 +9,10 @@ Audit snapshot for the 0.14.0 beta candidate (2026-08-16).
   an [architecture doc](architecture/overview.md) or in the package docstring.
 - Deep submodule paths (`chattice.cards.serialization.from_dict`, …) are
   **not** public API, with the explicit exceptions in
-  [Audit notes](#audit-notes).
+  [Compatibility notes](#compatibility-notes).
 - `Since` refers to the development phase that introduced the symbol.
   Phases 1–2 shipped together as v0.2.0 (initial import); later phases map to
-  the CHANGELOG versions (0.3.0 → Phase 3, …, 0.11.0 → Phase 11).
+  the CHANGELOG versions (0.3.0 … 0.11.0).
 
 ## Beta stability tiers
 
@@ -55,9 +55,9 @@ these promises:
 | `Event`               | Base domain event (frozen, slotted)                | P1    |
 | `MessageEvent`        | Chat message; contextual `reply()` and lossless read metadata | P1/DX |
 | `CommandEvent`        | Slash, quick, or message-action command            | P1    |
-| `CommandKind`         | Typed Google-native command family                 | F05   |
+| `CommandKind`         | Typed Google-native command family                 | P13+  |
 | `ActionEvent`         | Card click / interaction                           | P1    |
-| `ActionSource`        | Proven message/dialog/App Home action surface      | F05   |
+| `ActionSource`        | Proven message/dialog/App Home action surface      | P13+  |
 | `AddedToSpaceEvent`   | Bot added to space                                 | P1    |
 | `RemovedFromSpaceEvent`| Bot removed from space                             | P1    |
 | `UnknownEvent`        | Forward-compatible unknown envelope fallback       | P1    |
@@ -236,17 +236,17 @@ questions → three types ([capabilities](architecture/capabilities.md)).
 | `ResponseCapability`    | SYNC_RESPONSE, DIALOGS, APP_HOME, CARD_UPDATE_*, UPDATE_WIDGET | P13+ |
 | `OutboundCapabilities`  | Outbound Bot operations by credential kind                 | P13+  |
 | `OutboundCapability`    | MESSAGE_CREATE, MESSAGE_UPDATE, USER_IMPERSONATION         | P13+  |
-| `PreviewCapabilities`   | Explicit immutable Developer Preview enrollment            | F05   |
+| `PreviewCapabilities`   | Explicit immutable Developer Preview enrollment            | P13+  |
 | `PreviewFeature`        | Developer Preview Google features (stability flags)        | P13+  |
-| `can_open_dialog`       | One dialog predicate shared by capabilities + serializer   | F08   |
+| `can_open_dialog`       | One dialog predicate shared by capabilities + serializer   | P13+  |
 | `CapabilityNotSupported`| Runtime guard exception (fail before network)              | P8    |
 
 ## `chattice.workspace_events`
 
 | Symbol                 | Purpose                                           | Since |
 | ---------------------- | ------------------------------------------------- | ----- |
-| `EventsDispatcher`     | Independent Workspace resource-event feed         | F05   |
-| `EventsRouter`         | Independent Workspace resource-event router tree  | F05   |
+| `EventsDispatcher`     | Independent Workspace resource-event feed         | P13+  |
+| `EventsRouter`         | Independent Workspace resource-event router tree  | P13+  |
 | `WorkspaceEvent`       | Workspace Events domain model                     | P9    |
 | `WorkspaceEventType`   | Documented event type strings                     | P9    |
 | `parse_workspace_event`| CloudEvent → `WorkspaceEvent`                     | P9    |
@@ -279,7 +279,7 @@ questions → three types ([capabilities](architecture/capabilities.md)).
 
 ## `chattice.subscriptions`
 
-Not public API (internal prototype — see Audit notes). The
+Not public API. The
 `SubscriptionManager` contract is incomplete (no get/update/renew,
 payload options, TTL, lifecycle semantics) and has no implementation.
 
@@ -291,7 +291,7 @@ gate stable parser/router behavior remain in `chattice.capabilities`.
 
 ---
 
-## Phase 14/15 surfaces (new in 0.13.0)
+## Surfaces new in 0.13.0
 
 | Package | Symbols |
 | --- | --- |
@@ -328,7 +328,7 @@ contracts (agent request/response, tool policy, a provider adapter). It
 is experimental and outside the stable API; it is not part of the
 stable inventory below.
 
-## Audit notes
+## Compatibility notes
 
 Audited 2026-08-15 against the full test suite, mypy, ruff, and the strict
 mkdocs build.

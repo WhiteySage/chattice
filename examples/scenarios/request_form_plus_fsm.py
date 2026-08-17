@@ -1,12 +1,12 @@
 """Request form + FSM: the form collects; FSM REMEMBERS durable state.
 
-Charter §15 combination: a Google-native form collects all fields in one
+A Google-native form collects all fields in one
 interaction, and an FSM record stores the durable workflow state that
 must survive restarts, external callbacks, and later approval steps.
 The approval step advances the FSM record with compare-and-set.
 
 Run:
-    uv run python examples/scenarios/request_form_plus_fsm.py
+    python examples/scenarios/request_form_plus_fsm.py
 """
 
 from __future__ import annotations

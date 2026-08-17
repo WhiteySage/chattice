@@ -1,3 +1,6 @@
+<img src="https://raw.githubusercontent.com/WhiteySage/chattice/main/docs/assets/brand/chattice-logo.png"
+     alt="Chattice" width="320" />
+
 # Chattice
 
 Async, typed event framework for Google Chat apps — aiogram-quality DX, Google-native semantics.
@@ -42,7 +45,7 @@ dispatcher.include_router(router)
 - **Core is small.** Core abstracts Google Chat platform primitives and
   technical boilerplate ONLY. Business scenarios (polls, approvals,
   tickets) are assembled from the primitives in your
-  application code — never added to core (doctrine §16).
+  application code — never added to core.
 
 ## What this is not
 
@@ -51,6 +54,25 @@ dispatcher.include_router(router)
   [aiogram comparison](https://whiteysage.github.io/chattice/aiogram-comparison/)).
 - **Not a Google product.** Independent open-source project, not
   endorsed by Google.
+
+## Two ways to run
+
+Chattice has two honest startup models (see the
+[aiogram side-by-side](docs/aiogram-comparison.md)):
+
+```python
+# HTTP — Google calls your HTTPS endpoint; the handler RETURN is the
+# synchronous response (Dialogs and App Home work here).
+app.include_router(create_chat_router(dispatcher, GoogleTokenVerifier(audience=...)))
+# python -m uvicorn app:app
+
+# Pub/Sub streaming pull — a persistent subscriber process, visually
+# like aiogram's start_polling, but it is NOT Telegram polling.
+# No domain/TLS needed; no Dialogs, no App Home — answers go outbound
+# through the authenticated Bot.
+await dispatcher.run_pubsub(subscription, bot=bot)
+# python app.py
+```
 
 ## Capabilities
 
@@ -70,14 +92,16 @@ dispatcher.include_router(router)
 Python 3.11+ (3.11–3.13 tested). MIT-licensed.
 
 ```bash
-pip install chattice              # core
-pip install "chattice[fastapi]"  # FastAPI integration
-pip install "chattice[redis]"    # Redis FSM/idempotency storage
-pip install "chattice[pubsub]"   # Pub/Sub push + streaming pull
+pip install "chattice[fastapi,pubsub,redis]"  # core + all integrations
+
+# or pick only what you need:
+#   pip install chattice            core
+#   pip install "chattice[fastapi]" FastAPI integration
+#   pip install "chattice[redis]"   Redis FSM/idempotency storage
+#   pip install "chattice[pubsub]"  Pub/Sub push + streaming pull
 
 # using uv
-uv add chattice            # core
-uv add "chattice[fastapi]" # FastAPI integration
+uv add "chattice[fastapi,pubsub,redis]"
 ```
 
 ## Quickstart
@@ -135,7 +159,7 @@ Runnable examples live in [`examples/`](https://github.com/WhiteySage/chattice/t
 
 ## Status
 
-Pre-1.0 **public beta** (current version 0.14.0b1) — see
+Pre-1.0 **public beta** (current version 0.14.0b3) — see
 [CHANGELOG](CHANGELOG.md). The documented stable beta
 surface is frozen: pre-1.0 work may add APIs but does not incompatibly
 rename, remove, or change existing contracts. `chattice.experimental`

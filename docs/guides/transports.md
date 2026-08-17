@@ -27,13 +27,69 @@ retried; make effects idempotent.
 
 ## Pub/Sub streaming pull
 
-Install `chattice[pubsub]`, then run
-`dispatcher.run_pubsub(subscription, bot=bot)`. This is a persistent Pub/Sub
-subscriber stream with acknowledgements and delivery attempts, not
-Telegram-style long polling. Dialog and App Home responses remain unsupported.
+Install `chattice[pubsub]`. The full application is a long-lived process —
+visually familiar if you come from aiogram's `start_polling`, but
+technologically it is a persistent Pub/Sub subscriber stream with
+acknowledgements and delivery attempts, NOT Telegram-style long polling
+(Google Chat has no polling API):
+
+```python
+import asyncio
+import os
+
+from chattice import Dispatcher, Router
+from chattice.client import Bot
+from chattice.events import MessageEvent
+
+router = Router()
+
+
+@router.message()
+async def hello(message: MessageEvent) -> None:
+    await message.reply("Hello from Google Chat!")
+
+
+async def main() -> None:
+    bot = Bot(...)  # app-auth credentials
+    dispatcher = Dispatcher(bot=bot)
+    dispatcher.include_router(router)
+
+    await dispatcher.run_pubsub(os.environ["GOOGLE_CHAT_SUBSCRIPTION"])
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+Run with `python app.py`. The method name is deliberately explicit:
+`run_pubsub` names the concrete technology instead of hiding the transport
+behind a generic `start()`. Dialog and App Home responses remain
+unsupported on Pub/Sub.
 
 Choose HTTP for interactive UI. Choose Pub/Sub when infrastructure policy or
 behind-VPN consumption requires it and the application can respond through
 authenticated Chat API calls.
 
 Next: [Authentication and capabilities](auth-capabilities.md).
+
+## Why Pub/Sub push when HTTP already has a public endpoint?
+
+Push is a webhook with a durable queue in front of it:
+
+- **Delivery guarantees** — if your endpoint is down, Pub/Sub buffers
+  events (retries with backoff, dead-letter support) instead of losing
+  them like a direct webhook eventually does.
+- **At-least-once + duplicates** — Pub/Sub guarantees at-least-once
+  delivery, so duplicates are normal; use the built-in idempotency
+  storage in `create_pubsub_router`.
+- **Backpressure** — the topic absorbs bursts; your endpoint does not
+  have to keep up with the interaction deadline.
+- **One topic, many consumers** — attach extra subscriptions (audit,
+  analytics, a second bot) without touching the Chat configuration.
+- **Serverless-friendly** — push works with Cloud Run/Functions that
+  only serve HTTPS when called; pull requires a long-lived process.
+
+Rule of thumb: HTTP for interactive UI (dialogs, synchronous card
+updates); Pub/Sub push for durable delivery to a fragile/sleeping public
+endpoint; Pub/Sub pull for no-public-endpoint deployments.
+

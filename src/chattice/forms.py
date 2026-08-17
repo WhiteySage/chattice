@@ -24,6 +24,7 @@ On a match the decoded instance is injected under the name ``form``.
 from __future__ import annotations
 
 import dataclasses
+import logging
 from collections.abc import Mapping
 from typing import Any, Self, cast, get_type_hints
 
@@ -39,6 +40,8 @@ from chattice.events import (
     UnknownFormInput,
 )
 from chattice.filters import FilterValue
+
+_logger = logging.getLogger("chattice.forms")
 
 __all__ = ["FormDecodeError", "FormFilter", "FormModel"]
 
@@ -148,6 +151,14 @@ class FormFilter:
             return False
         try:
             instance = self.model.from_form_inputs(event.form_inputs)
-        except FormDecodeError:
+        except FormDecodeError as error:
+            # A filter mismatch is silent by contract, but a decode failure
+            # of an explicitly registered typed form is worth a debug line:
+            # new users otherwise search for hours why a button "does nothing".
+            _logger.debug(
+                "form decode failed for %s: %s",
+                self.model.__name__,
+                error,
+            )
             return False
         return {"form": instance}

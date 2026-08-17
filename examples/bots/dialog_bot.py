@@ -7,7 +7,7 @@ body, and the later SUBMIT_DIALOG carries the entered form inputs which the
 tests/cards/test_gate_dialog.py).
 
 Run:
-    uv run python examples/bots/dialog_bot.py
+    python examples/bots/dialog_bot.py
 """
 
 from __future__ import annotations

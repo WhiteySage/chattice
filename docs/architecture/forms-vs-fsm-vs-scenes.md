@@ -76,7 +76,7 @@ records come first; a Scene is never a second persistence engine.
 Canonical examples: `examples/scenarios/request_form.py`,
 `request_form_plus_fsm.py`, `registration_fsm.py`,
 `registration_dialog.py`. The Poll recipe was REMOVED (owner
-doctrine §16, 2026-08-16) — polls are application-owned scenarios
+2026-08-16) — polls are application-owned scenarios
 assembled from the primitives.
 
 ## Cross-context FSM access (explicit keys)

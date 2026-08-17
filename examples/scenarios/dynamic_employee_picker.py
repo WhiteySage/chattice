@@ -5,7 +5,7 @@ selectionInput, Google sends WIDGET_UPDATED with the query parameter, the
 handler answers with WidgetAutocomplete suggestions.
 
 Run:
-    uv run python examples/scenarios/dynamic_employee_picker.py
+    python examples/scenarios/dynamic_employee_picker.py
 """
 
 from __future__ import annotations

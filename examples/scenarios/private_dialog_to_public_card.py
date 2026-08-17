@@ -6,7 +6,7 @@ demonstrates the pattern with the testing MockBot standing in for the
 real client (production: Bot with app credentials).
 
 Run:
-    uv run python examples/scenarios/private_dialog_to_public_card.py
+    python examples/scenarios/private_dialog_to_public_card.py
 """
 
 from __future__ import annotations

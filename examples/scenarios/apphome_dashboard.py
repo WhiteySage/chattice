@@ -5,7 +5,7 @@ card navigation; widget interactions arrive as SUBMIT_FORM and refresh
 the card with updateCard.
 
 Run:
-    uv run python examples/scenarios/apphome_dashboard.py
+    python examples/scenarios/apphome_dashboard.py
 """
 
 from __future__ import annotations

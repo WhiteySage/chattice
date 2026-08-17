@@ -36,7 +36,7 @@ commands always may open dialogs; actions only when Google delivered
 them with `REQUEST_DIALOG` metadata; SUBMIT/CANCEL actions cannot
 return a new dialog. The HTTP serializer guards with the SAME
 predicate, so the advertised capability never produces a server error
-(F08).
+.
 
 Pub/Sub push and streaming-pull delivery have no synchronous response channel
 — both inject an empty `ResponseCapabilities` value and `require()` fails fast

@@ -1,6 +1,6 @@
 """Next-generation FSM record storage: atomic versioned records.
 
-Phase 13 review (finding #10): handler transitions must be atomic without
+Handler transitions must be atomic without
 exposing distributed lock objects. A record carries the whole FSM state
 under one key and transitions use compare-and-set on a revision number:
 
@@ -185,7 +185,13 @@ class RedisFSMRecordStorage:
         prefix: str = "chattice:fsmrecord",
         clock: Clock = time.time,
     ) -> None:
-        from redis import asyncio as aioredis
+        try:
+            from redis import asyncio as aioredis
+        except ImportError as error:
+            raise ImportError(
+                "Redis-backed storage requires the `chattice[redis]` extra "
+                "(pip install 'chattice[redis]')."
+            ) from error
 
         if redis is not None:
             self._redis = redis

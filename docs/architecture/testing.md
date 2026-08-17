@@ -5,7 +5,7 @@ builders, and assertions that let you exercise a whole application pipeline
 without ever touching raw Google JSON or standing up network transports.
 The core engine never imports `testing` — the dependency is one-way.
 
-The phase gate (`tests/testing/test_gate.py`) pins the core contract: an
+A CI gate (`tests/testing/test_gate.py`) pins the core contract: an
 application handler is tested end-to-end with `MockBot` + `EventFactory`,
 with **zero Google internals mocked**.
 
@@ -64,7 +64,7 @@ Assertions (each fails with an actionable message):
   on `get_message` reads or `update_message` payloads).
 
 `MockBot.send_message` mirrors the real `Bot` parameter names exactly —
-DI resolves by keyword, so a mismatch fails the phase gate, never the
+DI resolves by keyword, so a mismatch fails the CI gate, never the
 handler.
 
 ## EventFactory
@@ -143,3 +143,44 @@ in a test space, and the `CHATTICE_GOOGLE_CREDENTIALS` +
 `CHATTICE_GOOGLE_SPACE` env vars. The network bodies call the real API
 and nothing fakes success — a green live run always means real
 credentials were used.
+
+## Runnable pytest example
+
+```python
+# tests/test_echo.py
+import pytest
+
+from chattice import Dispatcher, Router
+from chattice.events import MessageEvent
+from chattice.testing import EventFactory, MockBot
+
+
+@pytest.fixture
+def dispatcher() -> Dispatcher:
+    router = Router()
+
+    @router.message()
+    async def echo(message: MessageEvent) -> str:
+        return f"You said: {message.text}"
+
+    dp = Dispatcher()
+    dp.include_router(router)
+    return dp
+
+
+@pytest.fixture
+def bot() -> MockBot:
+    return MockBot()
+
+
+@pytest.mark.asyncio
+async def test_echo(dispatcher: Dispatcher, bot: MockBot) -> None:
+    result = await dispatcher.feed_update(EventFactory.message("ping"), bot=bot)
+    assert result == "You said: ping"
+    bot.assert_no_messages()
+```
+
+Add `pytest-asyncio` to the dev dependencies; `asyncio_mode = "auto"`
+is already configured in the project, so the `@pytest.mark.asyncio`
+decorator is optional there.
+

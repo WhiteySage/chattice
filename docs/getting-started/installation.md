@@ -4,21 +4,23 @@ Chattice requires Python 3.11 or newer.
 
 ## Create a project
 
-With `uv`:
+Option 1 — the standard path with `pip`:
+
+```bash
+mkdir hello-chattice
+cd hello-chattice
+python3.11 -m venv .venv
+. .venv/bin/activate
+python -m pip install "chattice[fastapi]" uvicorn
+```
+
+Option 2 — with `uv` (optional convenience):
 
 ```bash
 mkdir hello-chattice
 cd hello-chattice
 uv init --python 3.11
 uv add "chattice[fastapi]" uvicorn
-```
-
-With the standard library and `pip`:
-
-```bash
-python3.11 -m venv .venv
-. .venv/bin/activate
-python -m pip install "chattice[fastapi]" uvicorn
 ```
 
 Optional extras are independent:
@@ -39,6 +41,6 @@ stable core.
 python -c "import chattice; print(chattice.__version__)"
 ```
 
-The output for this documentation line is `0.14.0b1`.
+The output for this documentation line is `0.14.0b3`.
 
 Next: [5-minute Quickstart](quickstart.md).

@@ -129,3 +129,35 @@ by `RawWidget`; exact unsupported API methods remain available through
 `Bot.raw_client`.
 
 Next: [Routing and state](routing-state.md).
+
+## Typed ActionData
+
+Bind typed dataclasses to button parameters without packed callback
+strings. The action function name is the discriminator; parameters are
+flat strings:
+
+```python
+from dataclasses import dataclass
+
+from chattice.actions import ActionData
+from chattice.cards import Button
+
+
+@dataclass
+class Deploy(ActionData, function="deploy"):
+    environment: str
+    version: str
+
+
+@router.action("deploy", Deploy.filter())
+async def deploy(event: ActionEvent, data: Deploy) -> str:
+    return f"Deploying {data.version} to {data.environment}"
+
+
+Button("Deploy", action=Deploy(environment="prod", version="1.2.3"))
+```
+
+If the incoming parameters cannot decode into the model, the filter does
+not match — enable the `chattice.actions` logger at DEBUG level to see
+the reason (see [Troubleshooting](../troubleshooting.md)).
+

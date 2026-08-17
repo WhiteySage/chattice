@@ -1,6 +1,6 @@
 # Reliability
 
-Phase 10's reliability contract is built on three verified facts and one
+The reliability contract is built on three verified facts and one
 explicit division of labor: Google's documented Chat API quotas,
 the gapic SDK's built-in retry behavior, and the framework's no-blind-retry
 rule for mutations. The framework does NOT implement its own retry loop;

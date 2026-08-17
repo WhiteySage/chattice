@@ -1,4 +1,4 @@
-"""The documentation acceptance journey, executable without Google credentials.
+"""The documented end-to-end example, executable without Google credentials.
 
 This intentionally uses only public Chattice imports. Google Console setup is a
 human step; every framework-side operation is exercised for real through the

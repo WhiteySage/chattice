@@ -20,7 +20,13 @@ import json
 from collections.abc import Mapping
 from typing import Any
 
-from redis import asyncio as aioredis
+try:
+    from redis import asyncio as aioredis
+except ImportError as error:  # pragma: no cover - env-dependent
+    raise ImportError(
+        "Redis-backed storage requires the `chattice[redis]` extra "
+        "(pip install 'chattice[redis]')."
+    ) from error
 
 from .storage import StorageKey
 

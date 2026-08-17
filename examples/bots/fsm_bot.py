@@ -7,7 +7,7 @@ first state), then every step is routed statefully and `finish()` closes the
 workflow (mirroring tests/fsm/test_gate.py).
 
 Run:
-    uv run python examples/bots/fsm_bot.py
+    python examples/bots/fsm_bot.py
 """
 
 from __future__ import annotations

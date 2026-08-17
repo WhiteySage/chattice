@@ -6,7 +6,7 @@ alternative lives in registration_dialog.py — one dialog collects the
 same fields in a single interaction (forms collect data).
 
 Run:
-    uv run python examples/scenarios/registration_fsm.py
+    python examples/scenarios/registration_fsm.py
 """
 
 from __future__ import annotations

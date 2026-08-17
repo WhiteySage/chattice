@@ -61,6 +61,24 @@ async def assistant(message: MessageEvent, agent: AgentBackend) -> str:
     return result.text
 ```
 
+`AgentRequest.from_event()` accepts `MessageEvent` only. For commands
+and card buttons, build the request from the text you already have:
+
+```python
+# slash command: use the argument text
+@router.command()
+async def ask_cmd(event: CommandEvent, agent: AgentBackend) -> str:
+    result = await agent.run(AgentRequest(text=event.message_text or ""))
+    return result.text
+
+
+# card button: use a field of your typed ActionData
+@router.action("ai.ask", AskAction.filter())
+async def ask_btn(event: ActionEvent, data: AskAction, agent: AgentBackend) -> str:
+    result = await agent.run(AgentRequest(text=data.question))
+    return result.text
+```
+
 Everything imported from `chattice.experimental.ai` is experimental. For work
 that can exceed the HTTP deadline, return quickly and send the eventual result
 through an authenticated `Bot`; use thread-scoped state where conversation
@@ -68,3 +86,52 @@ continuity matters. MCP, ADK, A2A, Dialogflow, and custom LLM providers belong
 in integration-specific application modules.
 
 See [stability](../stability.md) for the compatibility tiers.
+
+### Private ticket form
+
+`/create-ticket` → private card in the shared Space → Dialog → typed
+form → update the ORIGINAL private message. Per-user state lives in
+application storage keyed by `StorageKey(user, space, thread)`; the
+private card is visible only to `privateMessageViewer`. See
+`examples/scenarios/private_dialog_to_public_card.py` for the
+card/dialog mechanics.
+
+### Shared card updates (two users)
+
+One shared card in a Space, Assign/Approve buttons, `update_message` on
+the ONE message resource; workflow state lives in the application DB,
+NOT in per-user FSM. Per-user FSM keys never change how the shared
+card renders.
+
+### Error handler
+
+Register an error observer to catch handler failures and answer the
+user (or log) instead of surfacing a bare 500:
+
+```python
+from chattice import Dispatcher, Router
+from chattice.events import ErrorEvent
+
+router = Router()
+
+
+@router.error()
+async def on_error(event: ErrorEvent) -> str:
+    # event.exception, event.event, event.error_type
+    return "Something went wrong — try again."
+```
+
+### Idempotent sends
+
+For retried outbound sends, pass a stable `request_id` (Google
+deduplicates by it within the retention window) or a client-assigned
+`message_id`:
+
+```python
+await bot.send_message(
+    "spaces/AAA",
+    text="Deploy finished",
+    request_id=f"deploy-{deployment.id}",
+)
+```
+

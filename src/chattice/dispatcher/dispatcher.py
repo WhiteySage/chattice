@@ -78,7 +78,7 @@ class Dispatcher(Router):
         max_delivery_attempts: int = 5,
         stop_event: asyncio.Event | None = None,
     ) -> None:
-        """Streaming-pull Pub/Sub ingress (Stage B): the behind-VPN mode.
+        """Streaming-pull Pub/Sub ingress: the long-lived subscriber mode.
 
         Runs every delivery through THIS dispatcher's router/filter/
         middleware/DI pipeline. Handler answers go outbound through

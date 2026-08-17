@@ -7,7 +7,7 @@ Over a real push endpoint the response would be a 204 ack — the handler
 return value is only shown here.
 
 Run:
-    uv run python examples/bots/pubsub_bot.py
+    python examples/bots/pubsub_bot.py
 """
 
 from __future__ import annotations

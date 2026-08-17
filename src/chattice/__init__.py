@@ -5,4 +5,4 @@ from .filters import F
 
 __all__ = ["Dispatcher", "F", "Router", "__version__"]
 
-__version__ = "0.14.0b3"
+__version__ = "0.14.0b4"

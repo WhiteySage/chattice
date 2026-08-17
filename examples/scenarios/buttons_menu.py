@@ -1,4 +1,4 @@
-"""Multi-level button menu: the inline-keyboard release blocker (§14.9).
+"""Multi-level button menu: the Google-native equivalent of a Telegram inline menu.
 
 Google-native equivalent of a Telegram inline menu: a Card with buttons,
 each click answered by a NEW card via the sender-aware UPDATE_MESSAGE
@@ -6,7 +6,7 @@ response, using STABLE action identities (deploy.*, menu.back) — the
 menu survives restarts by construction.
 
 Run:
-    uv run python examples/scenarios/buttons_menu.py
+    python examples/scenarios/buttons_menu.py
 """
 
 from __future__ import annotations

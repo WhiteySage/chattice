@@ -6,7 +6,7 @@ filtered by the documented `google.workspace.chat.message.v1.created` type
 (the same pipeline as pubsub_bot, over Workspace Events).
 
 Run:
-    uv run python examples/bots/workspace_events_bot.py
+    python examples/bots/workspace_events_bot.py
 """
 
 from __future__ import annotations

@@ -28,6 +28,8 @@ docs/architecture/ai-boundary.md
 docs/architecture/post-phase-12-charter.md
 docs/policies.md
 
-# macOS iCloud synchronization artifacts ("name 2.ext" duplicates).
-* 2.*
+# macOS iCloud synchronization artifacts ("name N" duplicates, with or
+# without an extension suffix).
+* [0-9]
+* [0-9].*
 docs/dx-review-phase6.md

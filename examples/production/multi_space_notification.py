@@ -18,7 +18,7 @@ uses Bot with app credentials and Space memberships; this example runs
 on the testing MockBot with no network.
 
 Run:
-    uv run python examples/production/multi_space_notification.py
+    python examples/production/multi_space_notification.py
 """
 
 from __future__ import annotations

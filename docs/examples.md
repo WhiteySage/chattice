@@ -5,7 +5,7 @@ pytest. Live integration tests are separate and opt-in.
 
 | Task | Example |
 | --- | --- |
-| Full docs acceptance journey | `examples/docs/from_zero.py` |
+| Full documented example | `examples/docs/from_zero.py` |
 | Hello/echo and outbound MockBot | `examples/bots/echo_bot.py` |
 | Slash and quick commands | `examples/bots/command_bot.py` |
 | Cards and named actions | `examples/bots/buttons_bot.py` |
@@ -13,7 +13,8 @@ pytest. Live integration tests are separate and opt-in.
 | Dialog open and submit | `examples/bots/dialog_bot.py` |
 | FSM | `examples/bots/fsm_bot.py` |
 | FastAPI HTTP assembly | `examples/bots/fastapi_bot.py` |
-| Pub/Sub | `examples/bots/pubsub_bot.py` |
+| Pub/Sub push envelope | `examples/bots/pubsub_bot.py` |
+| Pub/Sub streaming pull (echo, run it) | `examples/bots/pubsub_pull_echo_bot.py` |
 | Workspace Events | `examples/bots/workspace_events_bot.py` |
 | App Home | `examples/scenarios/apphome_dashboard.py` |
 | Link preview | `examples/scenarios/link_preview.py` |
