@@ -79,7 +79,69 @@ test Space. Send `hello`; the response is `Hello from Google Chat!`.
 In a shared Space, Chat normally invokes the app when mentioned or through a
 configured command. Direct messages are their own Spaces.
 
-## 4. Verify without Google credentials
+## 4. Run it over Pub/Sub instead (no public HTTPS endpoint)
+
+No public URL available? Google Chat can deliver events into a Cloud Pub/Sub
+topic, and a long-lived subscriber process consumes them — no web server, no
+domain, no TLS. The complete echo bot:
+
+```bash
+python -m pip install "chattice[pubsub]"
+```
+
+```python
+# app.py
+import asyncio
+import os
+
+from chattice import Dispatcher, Router
+from chattice.auth import ServiceAccountCredentialsProvider
+from chattice.client import Bot
+from chattice.events import MessageEvent
+
+router = Router()
+
+
+@router.message()
+async def echo(message: MessageEvent) -> None:
+    await message.reply(f"You said: {message.text}")
+
+
+async def main() -> None:
+    bot = Bot(
+        credentials_provider=ServiceAccountCredentialsProvider.from_service_account_file(
+            os.environ["CHATTICE_SERVICE_ACCOUNT_FILE"]
+        )
+    )
+    dispatcher = Dispatcher(bot=bot)
+    dispatcher.include_router(router)
+    await dispatcher.run_pubsub(os.environ["GOOGLE_CHAT_SUBSCRIPTION"], bot=bot)
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+```bash
+export GOOGLE_CHAT_SUBSCRIPTION="projects/<project>/subscriptions/<name>"
+export CHATTICE_SERVICE_ACCOUNT_FILE="/path/to/service-account.json"
+python app.py
+```
+
+The service account needs the Pub/Sub Subscriber role on the subscription
+plus `chat.bot` for outbound calls. Create the topic and the pull
+subscription, then select the topic in the Chat app connection settings —
+[Pub/Sub setup](google-chat-setup.md#pubsub-setup-the-alternative-to-an-http-endpoint).
+
+There is no synchronous response channel on Pub/Sub: the handler answers
+through outbound `Bot` calls (`message.reply()`, `bot.send_message()`), and
+dialogs and App Home are unavailable. Pass `bot=bot` to `run_pubsub` — the
+runner injects it into the DI context for handlers. For interactive UI keep
+the HTTP transport above. See [HTTP and Pub/Sub](../guides/transports.md)
+for the full transport comparison, including the push mode
+(`create_pubsub_router`) for HTTPS endpoints that want durable delivery.
+
+## 5. Verify without Google credentials
 
 The repository's `examples/docs/from_zero.py` runs the same parser and
 dispatcher plus replies, Threads, commands, buttons, forms, dialogs, private
