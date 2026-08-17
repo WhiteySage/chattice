@@ -8,6 +8,7 @@ Async, typed event framework for Google Chat apps — aiogram-quality DX, Google
 [![Python](https://img.shields.io/badge/python-3.11%20%7C%203.12%20%7C%203.13-blue)](https://pypi.org/project/chattice/)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![Status](https://img.shields.io/badge/status-public%20beta-orange)](#status)
+[![Discussions](https://img.shields.io/badge/discussions-questions%20%26%20help-blue)](https://github.com/WhiteySage/chattice/discussions)
 
 ```python
 from chattice import Dispatcher, F, Router
@@ -159,7 +160,7 @@ Runnable examples live in [`examples/`](https://github.com/WhiteySage/chattice/t
 
 ## Status
 
-Pre-1.0 **public beta** (current version 0.14.0b3) — see
+Pre-1.0 **public beta** (current version 0.14.0b4) — see
 [CHANGELOG](CHANGELOG.md). The documented stable beta
 surface is frozen: pre-1.0 work may add APIs but does not incompatibly
 rename, remove, or change existing contracts. `chattice.experimental`
