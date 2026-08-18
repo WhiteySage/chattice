@@ -5,8 +5,9 @@ from __future__ import annotations
 
 import asyncio
 import inspect
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from enum import Enum
+from pathlib import Path
 from typing import Any, cast
 
 from google.api_core import exceptions as api_core_exceptions
@@ -14,6 +15,7 @@ from google.apps.chat_v1 import ChatServiceAsyncClient
 from google.apps.chat_v1.services.chat_service.transports import (
     ChatServiceTransport,
 )
+from google.apps.chat_v1.types.attachment import Attachment, AttachmentDataRef
 from google.apps.chat_v1.types.message import (
     CardWithId,
     CreateMessageNotificationOptions,
@@ -33,10 +35,25 @@ from chattice.capabilities import (
 )
 from chattice.cards import AccessoryWidget, Card
 from chattice.events import SpaceRef, ThreadRef, UserRef
+from chattice.media import AttachmentRef, InputFile, UploadedAttachment
 
 from .errors import ChatAPIError, wrap_api_error
 
 _GRPC_ASYNCIO = "grpc_asyncio"
+
+
+def _attachment_data_ref_proto(mapping: Mapping[str, object]) -> AttachmentDataRef:
+    """Build the SDK proto from a wire ``attachmentDataRef`` mapping."""
+    kwargs: dict[str, Any] = {}
+    resource_name = mapping.get("resourceName") or mapping.get("resource_name")
+    if isinstance(resource_name, str) and resource_name:
+        kwargs["resource_name"] = resource_name
+    upload_token = mapping.get("attachmentUploadToken") or mapping.get(
+        "attachment_upload_token"
+    )
+    if isinstance(upload_token, str) and upload_token:
+        kwargs["attachment_upload_token"] = upload_token
+    return AttachmentDataRef(**kwargs)
 
 
 def _scope_attribute(credentials: Credentials, attribute: str) -> frozenset[str] | None:
@@ -162,21 +179,44 @@ class Bot:
         credentials: Credentials | None = None,
         *,
         credentials_provider: CredentialsProvider | None = None,
+        app_credentials_provider: CredentialsProvider | None = None,
+        user_credentials_provider: CredentialsProvider | None = None,
         auth_mode: AuthMode | None = None,
         transport: ChatServiceTransport | None = None,
     ) -> None:
+        has_dual_providers = (
+            app_credentials_provider is not None
+            or user_credentials_provider is not None
+        )
+        if has_dual_providers:
+            if credentials is not None or credentials_provider is not None:
+                raise ValueError(
+                    "app_credentials_provider/user_credentials_provider cannot "
+                    "be combined with credentials/credentials_provider"
+                )
+            if auth_mode is not None:
+                raise ValueError(
+                    "auth_mode is implied by the app/user credential "
+                    "providers; pass it only for a single-identity Bot"
+                )
         self._credentials = credentials
-        self._credentials_provider = credentials_provider
+        # The APP identity: explicit dual provider wins, the legacy
+        # credentials_provider alias covers single-identity construction.
+        self._credentials_provider = credentials_provider or app_credentials_provider
+        self._user_credentials_provider = user_credentials_provider
         self._auth_mode = auth_mode
         self._transport = transport
         self._client: ChatServiceAsyncClient | None = None
         self._resolved_credentials: Credentials | None = None
         self._resolved_set = False
+        self._resolved_user_credentials: Credentials | None = None
+        self._resolved_user_set = False
         self._closed = False
         # single-flight tasks — concurrent first calls share ONE
         # credential resolution and ONE client construction (a shared
         # Task, not a lock held across provider code).
         self._credential_task: asyncio.Task[Credentials | None] | None = None
+        self._user_credential_task: asyncio.Task[Credentials | None] | None = None
         self._init_task: asyncio.Task[ChatServiceAsyncClient] | None = None
 
     def _classify(self, credentials: Credentials | None) -> AuthMode | None:
@@ -360,6 +400,61 @@ class Bot:
         self._resolved_set = True
         return self._resolved_credentials
 
+    def _resolve_user_credentials(self) -> Credentials | None:
+        """Resolve the USER identity (media upload, user-scoped operations).
+
+        A dual-identity Bot takes it from ``user_credentials_provider``;
+        a single-identity Bot falls back to its only credentials when
+        they classify as USER — otherwise the user identity is simply
+        absent and user-only operations fail locally with an actionable
+        message.
+        """
+        if self._resolved_user_set:
+            return self._resolved_user_credentials
+        if self._closed:
+            raise ChatAPIError("Bot is closed; create a new instance")
+        if self._user_credentials_provider is not None:
+            self._resolved_user_credentials = self._user_credentials_provider()
+        else:
+            single = self._resolve_credentials()
+            self._resolved_user_credentials = (
+                single if self._classify(single) is AuthMode.USER else None
+            )
+        self._resolved_user_set = True
+        return self._resolved_user_credentials
+
+    async def _resolve_user_credentials_async(self) -> Credentials | None:
+        """Async-safe single-flight USER identity resolution."""
+        task = self._user_credential_task
+        if task is None:
+            task = asyncio.create_task(self._resolve_user_credentials_once())
+            self._user_credential_task = task
+        try:
+            return await asyncio.shield(task)
+        except asyncio.CancelledError:
+            raise
+        except Exception:
+            if self._user_credential_task is task:
+                self._user_credential_task = None
+            raise
+
+    async def _resolve_user_credentials_once(self) -> Credentials | None:
+        if self._closed:
+            raise ChatAPIError("Bot is closed; create a new instance")
+        if self._resolved_user_set:
+            return self._resolved_user_credentials
+        if self._user_credentials_provider is not None:
+            self._resolved_user_credentials = await asyncio.to_thread(
+                self._user_credentials_provider
+            )
+        else:
+            single = await self._resolve_credentials_async()
+            self._resolved_user_credentials = (
+                single if self._classify(single) is AuthMode.USER else None
+            )
+        self._resolved_user_set = True
+        return self._resolved_user_credentials
+
     async def close(self) -> None:
         """Close the underlying SDK transport (idempotent, awaitable).
 
@@ -374,7 +469,11 @@ class Bot:
         if self._closed:
             return
         self._closed = True
-        for task in (self._credential_task, self._init_task):
+        for task in (
+            self._credential_task,
+            self._user_credential_task,
+            self._init_task,
+        ):
             if task is None:
                 continue
             # In-flight resolution/construction either completes and
@@ -425,6 +524,7 @@ class Bot:
         card: Card | None = None,
         notify: str | None = None,
         private_to: UserRef | str | None = None,
+        attachments: Sequence[InputFile | UploadedAttachment] | None = None,
     ) -> Message:
         # ``notify``: "force" | "silent" (documented app-auth notification
         # options; None = default). ``private_to``: privateMessageViewer —
@@ -458,6 +558,17 @@ class Bot:
                     "(Google: privateMessageViewer is not compatible with "
                     "accessory widgets)."
                 )
+        if attachments:
+            if viewer is not None:
+                raise ChatAPIError(
+                    "private_to cannot be combined with attachments "
+                    "(Google: private messages omit attachments)."
+                )
+            if accessory_widgets:
+                raise ChatAPIError(
+                    "attachments cannot be combined with accessory widgets "
+                    "(Google restriction)."
+                )
         if card is not None and mode is AuthMode.USER:
             raise CapabilityNotSupported(
                 "User-auth card creation is a Google Developer Preview "
@@ -476,7 +587,44 @@ class Bot:
         # one resource-name policy — bare IDs canonicalize to
         # spaces/{id} BEFORE any transport work.
         parent = _canonical_space(space)
+        # Attachments: the WHOLE set is preflighted before the first
+        # upload (paths, sizes, filenames, auth and space consistency),
+        # then uploaded sequentially in the caller's order — parallel
+        # uploads would leave no rollback story when one fails.
+        attached: list[Attachment] = []
+        if attachments:
+            for item in attachments:
+                if isinstance(item, UploadedAttachment):
+                    if item.space != parent:
+                        raise ChatAPIError(
+                            "UploadedAttachment is scoped to space "
+                            f"{item.space!r}; cannot send it in {parent!r}"
+                        )
+                else:
+                    item.validate()  # re-check path/file state, no reads
+            for item in attachments:
+                if isinstance(item, UploadedAttachment):
+                    attached.append(
+                        Attachment(
+                            attachment_data_ref=_attachment_data_ref_proto(
+                                item.attachment_data_ref
+                            )
+                        )
+                    )
+                else:
+                    uploaded = await self.upload_attachment(
+                        parent, item, timeout=timeout
+                    )
+                    attached.append(
+                        Attachment(
+                            attachment_data_ref=_attachment_data_ref_proto(
+                                uploaded.attachment_data_ref
+                            )
+                        )
+                    )
         message = Message(text=text or "")
+        for entry in attached:
+            message.attachment.append(entry)
         if viewer is not None:
             message.private_message_viewer = ProtoUser(name=viewer)
         if card is not None:
@@ -519,6 +667,144 @@ class Bot:
             )
         except api_core_exceptions.GoogleAPICallError as error:
             raise wrap_api_error(error) from error
+
+    async def upload_attachment(
+        self,
+        space: SpaceRef | str,
+        file: InputFile,
+        *,
+        timeout: float | None = None,
+    ) -> UploadedAttachment:
+        """Upload a local file as a Chat attachment (USER auth only).
+
+        media.upload requires user authentication, so the upload uses the
+        Bot's USER identity: ``user_credentials_provider`` on a
+        dual-identity Bot, or a single USER-classified credential set.
+        A Bot without any user identity is rejected locally, before any
+        media I/O. All deterministic constraints (file kind, size,
+        filename) are validated before the network call; the synchronous
+        REST client runs off the event loop.
+
+        Attribution note: a USER-authenticated call acts on behalf of
+        that user — this Google auth semantic is never hidden.
+        """
+        user_credentials = await self._resolve_user_credentials_async()
+        if user_credentials is None:
+            raise CapabilityNotSupported(
+                "media.upload requires user authentication, but this Bot "
+                "has no user identity; pass user_credentials_provider=... "
+                "to Bot(...) — UserCredentialsProvider, or "
+                "DelegatedUserCredentialsProvider for domain-wide delegation."
+            )
+        if self._classify(user_credentials) is AuthMode.APP:
+            raise CapabilityNotSupported(
+                "the user credentials provider returned service-account "
+                "credentials; Google treats media.upload as a "
+                "USER-authenticated call — use "
+                "DelegatedUserCredentialsProvider (with_subject) to "
+                "impersonate a Workspace user through domain-wide delegation."
+            )
+        user_capabilities = OutboundCapabilities.resolve(
+            AuthMode.USER,
+            scopes=_credential_scopes(AuthMode.USER, user_credentials),
+        )
+        user_capabilities.require(OutboundCapability.ATTACHMENT_UPLOAD)
+        parent = _canonical_space(space)
+        file.validate()
+        from chattice.media._rest import upload_media
+
+        data = await asyncio.to_thread(file.read)
+        response = await asyncio.to_thread(
+            upload_media,
+            user_credentials,
+            parent,
+            file.filename,
+            file.content_type,
+            data,
+            timeout,
+        )
+        data_ref = response.get("attachmentDataRef")
+        if not isinstance(data_ref, dict):
+            raise ChatAPIError(
+                f"media.upload returned no attachmentDataRef; got {response!r}"
+            )
+        return UploadedAttachment(
+            space=parent,
+            filename=file.filename,
+            attachment_data_ref=dict(data_ref),
+            raw=dict(response),
+        )
+
+    async def download_attachment(
+        self,
+        attachment: AttachmentRef | str,
+        *,
+        destination: str | Path | None = None,
+        timeout: float | None = None,
+    ) -> bytes | Path:
+        """Download Chat-uploaded attachment data (USER or APP auth).
+
+        A string is treated as an ``attachmentDataRef.resourceName``.
+        Drive-backed references are rejected locally with an actionable
+        message: media.download serves Chat-uploaded content only, Drive
+        files need the Google Drive API.
+        """
+        if isinstance(attachment, AttachmentRef):
+            if attachment.is_drive:
+                raise ChatAPIError(
+                    "Drive-backed attachments cannot be downloaded through "
+                    "Chat media.download; use the Google Drive API with "
+                    "this attachment's drive_file_id."
+                )
+            resource_name = attachment.resource_name
+        else:
+            resource_name = attachment
+        if not resource_name:
+            raise ChatAPIError(
+                "attachment has no attachmentDataRef.resourceName; nothing to download"
+            )
+        capabilities = await self._capabilities_async()
+        if capabilities is not None:
+            capabilities.require(OutboundCapability.MEDIA_DOWNLOAD)
+        credentials = await self._resolve_credentials_async()
+        from chattice.media._rest import download_media
+
+        def _run() -> bytes | Path:
+            data = download_media(credentials, resource_name, timeout)
+            if destination is None:
+                return data
+            path = Path(destination)
+            path.write_bytes(data)
+            return path
+
+        return await asyncio.to_thread(_run)
+
+    async def get_attachment(
+        self, name: str, *, timeout: float | None = None
+    ) -> AttachmentRef:
+        """Fetch attachment metadata (APP auth + chat.bot only).
+
+        Uses the GAPIC ``get_attachment``
+        (``spaces.messages.attachments.get``) and returns a typed
+        :class:`AttachmentRef`. Symmetric media flow:
+        ``upload_attachment`` → ``get_attachment`` → ``download_attachment``.
+        """
+        mode = await self._auth_mode_async()
+        if mode is not AuthMode.APP:
+            raise CapabilityNotSupported(
+                "attachment metadata (spaces.messages.attachments.get) "
+                "requires app authentication (chat.bot)."
+            )
+        capabilities = await self._capabilities_async()
+        if capabilities is not None:
+            capabilities.require(OutboundCapability.ATTACHMENT_METADATA_GET)
+        try:
+            proto = await (await self._get_client_async()).get_attachment(
+                name=name, timeout=timeout
+            )
+        except api_core_exceptions.GoogleAPICallError as error:
+            raise wrap_api_error(error) from error
+        return AttachmentRef.from_proto(proto)
 
     async def get_message(self, name: str, *, timeout: float | None = None) -> Message:
         try:

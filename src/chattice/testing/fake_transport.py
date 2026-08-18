@@ -10,6 +10,11 @@ import asyncio
 from collections.abc import Awaitable, Callable
 
 from google.apps.chat_v1.services.chat_service import transports
+from google.apps.chat_v1.types.attachment import (
+    Attachment,
+    AttachmentDataRef,
+    GetAttachmentRequest,
+)
 from google.apps.chat_v1.types.message import (
     CreateMessageRequest,
     DeleteMessageRequest,
@@ -40,6 +45,7 @@ class FakeChatTransport(transports.ChatServiceTransport):
         self.error = error
         self.messages: dict[str, Message] = {}
         self.spaces: dict[str, Space] = {}
+        self.attachments: dict[str, Attachment] = {}
         self.requests: list[CreateMessageRequest] = []
         self.updates: list[UpdateMessageRequest] = []
         self.timeouts: list[object] = []
@@ -53,6 +59,7 @@ class FakeChatTransport(transports.ChatServiceTransport):
             self.update_message: self._wrap(self.update_message),
             self.delete_message: self._wrap(self.delete_message),
             self.get_space: self._wrap(self.get_space),
+            self.get_attachment: self._wrap(self.get_attachment),
         }
 
     @property
@@ -166,3 +173,24 @@ class FakeChatTransport(transports.ChatServiceTransport):
 
             raise exceptions.NotFound(f"space not found: {request.name}")  # type: ignore[no-untyped-call]
         return space
+
+    async def get_attachment(
+        self,
+        request: GetAttachmentRequest,
+        *,
+        retry: object = None,
+        timeout: object = None,
+        metadata: object = (),
+    ) -> Attachment:
+        self._check_error()
+        attachment = self.attachments.get(request.name)
+        if attachment is not None:
+            return attachment
+        return Attachment(
+            name=request.name,
+            content_name="fake.png",
+            content_type="image/png",
+            attachment_data_ref=AttachmentDataRef(
+                resource_name=f"{request.name}/media"
+            ),
+        )

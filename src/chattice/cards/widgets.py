@@ -5,18 +5,20 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Any
+from urllib.parse import urlparse
 
 from google.apps.card_v1.types.card import Button as ProtoButton
 from google.apps.card_v1.types.card import ButtonList as ProtoButtonList
 from google.apps.card_v1.types.card import DateTimePicker as ProtoDateTimePicker
 from google.apps.card_v1.types.card import Divider as ProtoDivider
+from google.apps.card_v1.types.card import Image as ProtoImage
 from google.apps.card_v1.types.card import SelectionInput as ProtoSelectionInput
 from google.apps.card_v1.types.card import TextInput as ProtoTextInput
 from google.apps.card_v1.types.card import TextParagraph as ProtoTextParagraph
 
 from chattice.actions import ActionData
 
-from .actions import Action
+from .actions import Action, OpenLink
 from .validation import Validation
 
 __all__ = [
@@ -26,10 +28,59 @@ __all__ = [
     "ButtonType",
     "DateTimePicker",
     "Divider",
+    "Image",
     "SelectionInput",
     "TextInput",
     "TextParagraph",
 ]
+
+
+@dataclass(frozen=True, slots=True)
+class Image:
+    """An HTTPS-hosted picture rendered inside a Card.
+
+    Card Image is a URL-based UI widget — the other Google media surface
+    (a local file uploaded as a Chat attachment) is
+    ``chattice.media.InputFile``. Local paths, bytes and ``data:`` URLs
+    are NOT Card images and are rejected at construction.
+    """
+
+    image_url: str
+    alt_text: str | None = None
+    on_click: Action | OpenLink | None = None
+
+    def __post_init__(self) -> None:
+        parsed = urlparse(self.image_url)
+        if parsed.scheme != "https" or not parsed.netloc:
+            raise ValueError(
+                "Image.image_url must be an absolute HTTPS URL; local "
+                "paths, bytes and data: URLs are not Card images — use "
+                "InputFile attachments for local files"
+            )
+        if isinstance(self.on_click, Action):
+            # Snapshot mutable parameters so the frozen facade cannot
+            # change after validation.
+            object.__setattr__(
+                self,
+                "on_click",
+                Action(
+                    function=self.on_click.function,
+                    parameters=dict(self.on_click.parameters),
+                    interaction=self.on_click.interaction,
+                ),
+            )
+
+    def to_proto(self) -> ProtoImage:
+        """Build the SDK Image proto."""
+        kwargs: dict[str, Any] = {"image_url": self.image_url}
+        if self.alt_text is not None:
+            kwargs["alt_text"] = self.alt_text
+        if self.on_click is not None:
+            if isinstance(self.on_click, Action):
+                kwargs["on_click"] = {"action": self.on_click.to_proto()}
+            else:
+                kwargs["on_click"] = {"open_link": self.on_click.to_proto()}
+        return ProtoImage(**kwargs)
 
 
 class ButtonInteraction:

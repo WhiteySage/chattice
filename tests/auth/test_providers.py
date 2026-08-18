@@ -11,6 +11,7 @@ from chattice.auth import (
     CHAT_BOT_SCOPE,
     AuthMode,
     CredentialsProvider,
+    DelegatedUserCredentialsProvider,
     ServiceAccountCredentialsProvider,
     UserCredentialsProvider,
 )
@@ -70,3 +71,41 @@ def test_user_provider_does_not_refresh_valid() -> None:
     provider = UserCredentialsProvider(credentials)
     result = provider()
     assert result.refreshed == 0  # type: ignore[attr-defined]
+
+
+class _DelegatingCredentials(AnonymousCredentials):
+    def __init__(self) -> None:
+        super().__init__()  # type: ignore[no-untyped-call]
+        self.delegated_to: str | None = None
+
+    def with_subject(self, subject: str) -> object | None:
+        self.delegated_to = subject
+        return self
+
+
+class _NonDelegatingCredentials(AnonymousCredentials):
+    def __init__(self) -> None:
+        super().__init__()  # type: ignore[no-untyped-call]
+
+    def with_subject(self, subject: str) -> object | None:
+        del subject
+        return None
+
+
+def test_delegated_provider_calls_with_subject() -> None:
+    source = _DelegatingCredentials()
+    provider = DelegatedUserCredentialsProvider(
+        provider=lambda: source,
+        subject="chat-bot-user@company.com",
+    )
+    result = provider()
+    assert result.delegated_to == "chat-bot-user@company.com"  # type: ignore[attr-defined]
+
+
+def test_delegated_provider_rejects_unsupported_credentials() -> None:
+    provider = DelegatedUserCredentialsProvider(
+        provider=lambda: _NonDelegatingCredentials(),
+        subject="chat-bot-user@company.com",
+    )
+    with pytest.raises(ValueError, match="Domain-Wide Delegation"):
+        provider()

@@ -12,7 +12,7 @@ from google.protobuf import json_format  # type: ignore[import-untyped]
 
 from chattice._json_snapshot import deep_snapshot
 
-from .actions import Action
+from .actions import Action, OpenLink
 from .raw import RawWidget
 from .serialization import from_dict, to_dict
 from .validation import TextInputType, Validation
@@ -21,6 +21,7 @@ from .widgets import (
     ButtonList,
     DateTimePicker,
     Divider,
+    Image,
     SelectionInput,
     TextInput,
     TextParagraph,
@@ -35,6 +36,7 @@ Widget = (
     | TextInput
     | SelectionInput
     | DateTimePicker
+    | Image
     | RawWidget
 )
 
@@ -46,6 +48,7 @@ _SUPPORTED_WIDGET_KEYS = frozenset(
         "textInput",
         "selectionInput",
         "dateTimePicker",
+        "image",
     }
 )
 
@@ -133,6 +136,8 @@ class Section:
             return {"selection_input": _proto_dict(widget.to_proto())}
         if isinstance(widget, DateTimePicker):
             return {"date_time_picker": _proto_dict(widget.to_proto())}
+        if isinstance(widget, Image):
+            return {"image": _proto_dict(widget.to_proto())}
         if isinstance(widget, RawWidget):
             # Escape hatch: parse the documented camelCase payload into a
             # proto and emit the proto-plus dict (unknown fields are
@@ -268,6 +273,21 @@ class Section:
                         label=dp.label,
                         value_ms_epoch=dp.value_ms_epoch or None,
                         timezone_offset_date=dp.timezone_offset_date or None,
+                    )
+                )
+            elif which == "image":
+                image = widget.image
+                on_click: Action | OpenLink | None = None
+                click_kind = image.on_click._pb.WhichOneof("data")
+                if click_kind == "action":
+                    on_click = Action.from_proto(image.on_click.action)
+                elif click_kind == "open_link":
+                    on_click = OpenLink.from_proto(image.on_click.open_link)
+                widgets.append(
+                    Image(
+                        image_url=image.image_url,
+                        alt_text=image.alt_text or None,
+                        on_click=on_click,
                     )
                 )
             else:

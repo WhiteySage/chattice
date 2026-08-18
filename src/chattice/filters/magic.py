@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Final, Literal, TypeAlias
@@ -101,6 +102,29 @@ class MagicField(MagicExpression):
         """Match when the complete path can be resolved."""
         return _MethodExpression("exists", self, None)
 
+    def regexp(self, pattern: str | re.Pattern[str], flags: int = 0) -> MagicExpression:
+        """Match a string field with a Python regular expression.
+
+        Uses ``re.match`` semantics — the pattern must match FROM THE
+        START of the value. Accepts a pattern string (compiled once, at
+        filter construction) or a pre-compiled ``re.Pattern``. Invalid
+        patterns raise ``ValueError`` at construction, never at
+        evaluation time. ``flags`` cannot be combined with a compiled
+        pattern. Missing fields and non-string values never match.
+
+        Do not wrap patterns in ``/.../`` — this is Python regex syntax.
+        """
+        if isinstance(pattern, re.Pattern):
+            if flags:
+                raise ValueError("flags cannot be combined with a compiled re.Pattern")
+            compiled: re.Pattern[str] = pattern
+        else:
+            try:
+                compiled = re.compile(pattern, flags)
+            except re.error as error:
+                raise ValueError(f"invalid regex pattern: {error}") from error
+        return _MethodExpression("regexp", self, compiled)
+
     def resolve(self, event: Event) -> object:
         """Resolve this path, returning an internal missing sentinel on absence."""
         current: object = event
@@ -147,7 +171,9 @@ class _ComparisonExpression(MagicExpression):
 
 @dataclass(frozen=True, slots=True)
 class _MethodExpression(MagicExpression):
-    operation: Literal["contains", "startswith", "endswith", "in", "is", "exists"]
+    operation: Literal[
+        "contains", "startswith", "endswith", "in", "is", "exists", "regexp"
+    ]
     field: MagicField
     expected: object
 
@@ -159,6 +185,14 @@ class _MethodExpression(MagicExpression):
             return False
         if self.operation == "is":
             return actual is self.expected
+        if self.operation == "regexp":
+            if not isinstance(actual, str):
+                return False
+            pattern = self.expected
+            if not isinstance(pattern, re.Pattern):
+                return False
+            # re.match semantics: anchored at the start of the value.
+            return pattern.match(actual) is not None
         try:
             if self.operation == "contains":
                 return self.expected in actual  # type: ignore[operator]

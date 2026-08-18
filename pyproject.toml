@@ -45,12 +45,16 @@ gemini = [
 pubsub = [
     "google-cloud-pubsub>=2.21,<3",
 ]
+media = [
+  "google-api-python-client>=2.198,<3",
+]
 
 [dependency-groups]
 dev = [
   "cryptography>=50,<51",
   "fakeredis>=2.20,<4",
   "fastapi>=0.115,<1",
+  "google-api-python-client>=2.198,<3",
   "google-cloud-pubsub>=2.21,<3",
   "google-genai>=1,<3",
   "httpx>=0.27,<1",
@@ -68,6 +72,10 @@ docs = [
   "mkdocs>=1.6,<2",
   "mkdocs-material>=9.6,<10",
 ]
+
+[tool.ruff.lint.per-file-ignores]
+# Cyrillic test strings are intentional (regexp spec from the owner ТЗ).
+"tests/test_regexp_filters.py" = ["RUF001"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/chattice"]
