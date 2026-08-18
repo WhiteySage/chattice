@@ -246,8 +246,7 @@ async def test_attachment_thread_reply_uses_user_create(
     request = user_transport.requests[-1]
     assert request.message.thread.name == "spaces/A/threads/T1"
     assert (
-        request.message_reply_option
-        == request.MessageReplyOption.REPLY_MESSAGE_OR_FAIL
+        request.message_reply_option == request.MessageReplyOption.REPLY_MESSAGE_OR_FAIL
     )
 
 
@@ -304,9 +303,7 @@ async def test_concurrent_attachment_sends_init_user_client_once(
         await asyncio.sleep(0)
         return await original(self)
 
-    monkeypatch.setattr(
-        "chattice.client.bot.Bot._initialize_user_client", counted_init
-    )
+    monkeypatch.setattr("chattice.client.bot.Bot._initialize_user_client", counted_init)
     monkeypatch.setattr(
         "chattice.client.bot.Bot._build_user_client",
         lambda self, credentials: _user_client(user_transport),

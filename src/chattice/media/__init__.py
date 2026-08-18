@@ -195,9 +195,7 @@ class InputFile:
         try:
             file_stat = os.fstat(fd)
             if not stat.S_ISREG(file_stat.st_mode):
-                raise ValueError(
-                    f"attachment path is not a regular file: {raw!r}"
-                )
+                raise ValueError(f"attachment path is not a regular file: {raw!r}")
             if file_stat.st_size > MAX_ATTACHMENT_SIZE_BYTES:
                 raise ValueError("attachment grew past the 200 MB Google upload limit")
             chunks: list[bytes] = []
