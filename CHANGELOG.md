@@ -210,7 +210,7 @@ to PyPI.
 - Verification failures map to HTTP 401 per the official docs; malformed
   payloads to 400; handler failures to 500.
 
-## Unreleased
+## [0.14.0b5] — 2026-08-18 — media attachments, regex filters, dual-identity auth
 
 - Added `chattice.media`: `InputFile` (from_path/from_bytes, lazy reads,
   local preflight), `UploadedAttachment` (space-scoped), typed
@@ -233,6 +233,8 @@ to PyPI.
 - Added the optional `chattice[media]` extra (official REST media
   endpoints; the GAPIC client cannot carry a binary media body).
 - Added the `Files, Images & Media` guide.
+
+## Unreleased
 
 - Added the pure Google Chat interaction adapter for all eight stable event
   types, direct/App Home envelopes, typed common/form data, and explicit parser
