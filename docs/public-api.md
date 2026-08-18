@@ -91,6 +91,7 @@ these promises:
 | `BaseFilter`    | Convenience base class                              | P1    |
 | `FilterLike`    | Type alias (predicate or value)                     | P1    |
 | `FilterValue`   | Type alias for filterable values                    | P1    |
+| `MagicField.regexp(pattern, flags=)` | Python-regex routing, `re.match` semantics | 0.14.0b5 |
 
 ## `chattice.middleware`
 
@@ -175,6 +176,10 @@ these promises:
 | `ChatUnauthenticatedError`     | Wrapped 401-class error                        | P4    |
 | `wrap_api_error`               | Error mapping helper (SDK error → hierarchy)   | P4    |
 | `CredentialsProvider`          | Credential protocol — compat re-export (P8)    | P4/P8 |
+| `Bot.upload_attachment()`      | USER-auth media upload (`InputFile` → `UploadedAttachment`) | 0.14.0b5 |
+| `Bot.download_attachment()`    | Media download (USER or APP; bytes or Path)    | 0.14.0b5 |
+| `Bot.get_attachment()`         | Attachment metadata (APP auth + chat.bot)      | 0.14.0b5 |
+| `Bot.send_message(..., attachments=)` | Create with uploaded/local attachments  | 0.14.0b5 |
 
 ## `chattice.cards`
 
@@ -198,6 +203,17 @@ these promises:
 | `ButtonInteraction` | `OPEN_DIALOG` interaction constant              | P6    |
 | `Validation`        | Input validation facade (character limit/type)  | P6    |
 | `TextInputType`     | Input type constants                            | P6    |
+| `Image`             | HTTPS-hosted picture widget (URL-only)          | 0.14.0b5 |
+
+## `chattice.media` (new)
+
+| Symbol                    | Purpose                                       | Since |
+| ------------------------- | --------------------------------------------- | ----- |
+| `InputFile`               | Canonical local file model (`from_path`/`from_bytes`) | 0.14.0b5 |
+| `UploadedAttachment`      | Upload result scoped to one Space             | 0.14.0b5 |
+| `AttachmentRef`           | Typed inbound attachment metadata             | 0.14.0b5 |
+| `AttachmentSource`        | `UPLOADED_CONTENT` / `DRIVE_FILE`             | 0.14.0b5 |
+| `MAX_ATTACHMENT_SIZE_BYTES` | Documented 200 MB upload ceiling            | 0.14.0b5 |
 
 ## `chattice.fsm`
 
@@ -221,6 +237,7 @@ these promises:
 | `CredentialsProvider`             | Credential protocol (canonical home)      | P8    |
 | `ServiceAccountCredentialsProvider`| Lazy service-account credentials         | P8    |
 | `UserCredentialsProvider`         | User credentials with lazy refresh        | P8    |
+| `DelegatedUserCredentialsProvider`| Domain-Wide Delegation user auth (`with_subject`) | 0.14.0b5 |
 | `AuthMode`                        | Auth mode enum (app / user)               | P8    |
 | `CHAT_BOT_SCOPE`                  | Documented `chat.bot` OAuth scope         | P8    |
 

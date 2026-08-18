@@ -54,6 +54,9 @@ valid and treats scope information as unknown.
 | --- | --- | --- | --- |
 | MESSAGE_CREATE | `chat.bot` | `chat.messages.create`, `chat.messages`, `chat.import` | Chat API `spaces.messages.create` |
 | MESSAGE_UPDATE | `chat.bot` | `chat.messages`, `chat.import` | Chat API `spaces.messages.update` |
+| ATTACHMENT_UPLOAD | — (not supported) | `chat.messages.create`, `chat.messages`, `chat.import` | Chat API `media.upload` (user auth only) |
+| MEDIA_DOWNLOAD | `chat.bot` | `chat.messages.readonly`, `chat.messages` | Chat API `media.download` |
+| ATTACHMENT_METADATA_GET | `chat.bot` | — (not supported) | Chat API `spaces.messages.attachments.get` (app auth only) |
 | USER_IMPERSONATION | identity-derived, no | identity-derived, yes | OAuth user identity or domain-wide delegation; not a method scope |
 
 When scopes are reliably known, a capability is present when **any** scope in

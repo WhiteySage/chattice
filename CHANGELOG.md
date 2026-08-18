@@ -212,6 +212,28 @@ to PyPI.
 
 ## Unreleased
 
+- Added `chattice.media`: `InputFile` (from_path/from_bytes, lazy reads,
+  local preflight), `UploadedAttachment` (space-scoped), typed
+  `AttachmentRef`/`AttachmentSource` and the additive
+  `MessageEvent.attachment_refs` accessor.
+- Added the Bot media flow: `upload_attachment` (USER auth),
+  `download_attachment` (USER or APP), `get_attachment` (APP + chat.bot),
+  `send_message(attachments=...)` and `attachments=` on contextual sends —
+  the whole set is preflighted locally, then uploaded sequentially.
+- Added dual-identity Bots: `app_credentials_provider` /
+  `user_credentials_provider` with capability-based identity selection and
+  `DelegatedUserCredentialsProvider` (Domain-Wide Delegation via
+  `with_subject` — one service-account JSON for both identities).
+- Added outbound capabilities `ATTACHMENT_UPLOAD`, `MEDIA_DOWNLOAD`,
+  `ATTACHMENT_METADATA_GET` with the documented scope matrix.
+- Added the typed Cards v2 `Image` widget (HTTPS-only, `on_click` via the
+  existing Action/OpenLink facades).
+- Added `F.text.regexp(pattern, flags=)` — Python-regex routing with
+  `re.match` semantics, compiled once at filter construction.
+- Added the optional `chattice[media]` extra (official REST media
+  endpoints; the GAPIC client cannot carry a binary media body).
+- Added the `Files, Images & Media` guide.
+
 - Added the pure Google Chat interaction adapter for all eight stable event
   types, direct/App Home envelopes, typed common/form data, and explicit parser
   exceptions.

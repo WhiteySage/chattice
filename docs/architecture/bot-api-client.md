@@ -58,6 +58,29 @@ Use object methods when you already have a Google Chat context. Use
 `Bot.send_message()` when addressing a Space explicitly from services, jobs,
 or application code outside an interaction handler.
 
+## Media pipeline (two identities, one Bot)
+
+`media.upload` accepts USER authentication only, while ordinary messages
+and cards use APP auth. The Bot holds both identities and selects per
+operation:
+
+```
+Bot(app_credentials_provider=..., user_credentials_provider=...)
+ ├─ ordinary send / card / update      → APP identity (GAPIC client)
+ └─ attachments=[InputFile(...)]       → USER identity
+     ├─ local preflight of the WHOLE set (paths, sizes, filenames,
+     │  private_to/accessory-widget conflicts, space consistency)
+     ├─ sequential REST media.upload per file (off-loop, to_thread)
+     └─ canonical messages.create with attachmentDataRef entries
+```
+
+Uploads and downloads use the optional `chattice[media]` extra
+(google-api-python-client media endpoints) — the GAPIC client cannot
+carry a binary media body. `get_attachment` metadata uses the GAPIC
+`get_attachment` (APP-only). Download accepts USER or APP; Drive-backed
+references are rejected locally with a Drive-API hint. A
+USER-authenticated call acts on behalf of that user.
+
 ## Thread semantics
 
 `send_message(..., thread=ThreadRef(...))` sets `message.thread.name` and, by
