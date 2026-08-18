@@ -85,6 +85,7 @@ await dispatcher.run_pubsub(subscription, bot=bot)
 | Dialogs | OPEN_DIALOG, submit/cancel observers, action status; capability-gated per transport |
 | FSM | State/StatesGroup, Memory + Redis record storage (compare-and-set) |
 | Ingress | HTTP (verified), Pub/Sub push (verified), Pub/Sub streaming pull, Workspace Events CloudEvents |
+| Media | Local-file attachments sent with USER auth end to end (`media.upload` → `messages.create`, sender = HUMAN); download USER/APP; metadata APP; 200 MB local preflight |
 | Auth | App (service account), user (OAuth refresh), incoming verification |
 | Testing | MockBot, EventFactory, assertions, fake transport |
 

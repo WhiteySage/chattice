@@ -76,8 +76,10 @@ bot = Bot(
 ```
 
 Ordinary sends and cards use the app identity; `attachments=[...]`
-uploads use the user identity — handler code does not change. See
-[Files, Images & Media](../guides/files-media.md).
+sends use the user identity **end to end** — `media.upload` AND the
+final `messages.create` run on the USER client (the sender of an
+attachment message is the authenticated user). Handler code does not
+change. See [Files, Images & Media](../guides/files-media.md).
 
 `DelegatedUserCredentialsProvider` uses Domain-Wide Delegation: the
 service account impersonates a configured Workspace user via

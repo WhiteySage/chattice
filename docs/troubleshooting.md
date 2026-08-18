@@ -102,9 +102,10 @@ Format: Symptom → Cause → Verify → Fix.
 
 ## Attachment upload failure
 
-- **Cause:** `media.upload` is USER-auth only; app/service-account auth
-  cannot upload. The Bot fails locally with `CapabilityNotSupported`
-  naming the missing user identity.
+- **Cause:** attachment sends are USER-authenticated end to end —
+  `media.upload` AND the final `messages.create` run on the USER client.
+  An app/service-account-only Bot cannot send attachments; the Bot fails
+  locally with `CapabilityNotSupported` naming the missing user identity.
 - **Verify:** the exception type — a local `CapabilityNotSupported`
   (no network) vs `ChatPermissionDeniedError` (Google denied it).
 - **Fix:** configure a dual-identity Bot:
@@ -112,7 +113,8 @@ Format: Symptom → Cause → Verify → Fix.
   Inside Google Workspace, `DelegatedUserCredentialsProvider` reuses the
   same service-account JSON with a `subject=` (Domain-Wide Delegation);
   with end-user OAuth use `UserCredentialsProvider`. A user-authenticated
-  call acts on behalf of that user. See
+  call acts on behalf of that user — the attachment message is sent from
+  the USER identity (`sender.type = HUMAN`). See
   [Files, Images & Media](guides/files-media.md).
 
 ## Media extra missing
