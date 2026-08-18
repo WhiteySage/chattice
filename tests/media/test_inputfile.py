@@ -85,6 +85,30 @@ def test_validate_rechecks_changed_file(tmp_path: Path) -> None:
         file.read()
 
 
+def test_validate_rejects_grown_file(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    path = tmp_path / "x.png"
+    path.write_bytes(b"x")
+    monkeypatch.setattr("chattice.media.MAX_ATTACHMENT_SIZE_BYTES", 100)
+    file = InputFile.from_path(str(path))
+    path.write_bytes(b"y" * 200)
+    with pytest.raises(ValueError, match="grew"):
+        file.validate()
+
+
+def test_read_rejects_grown_file(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    path = tmp_path / "x.png"
+    path.write_bytes(b"x")
+    monkeypatch.setattr("chattice.media.MAX_ATTACHMENT_SIZE_BYTES", 100)
+    file = InputFile.from_path(str(path))
+    path.write_bytes(b"y" * 200)
+    with pytest.raises(ValueError, match="grew"):
+        file.read()
+
+
 def test_from_bytes_snapshot() -> None:
     file = InputFile.from_bytes(b"\x89PNG", filename="result.png")
     assert file.filename == "result.png"

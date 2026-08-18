@@ -43,6 +43,37 @@ def test_from_mapping_drive_file() -> None:
     assert ref.filename == "doc.docx"
 
 
+def test_from_proto_drive() -> None:
+    from google.apps.chat_v1.types.attachment import DriveDataRef
+
+    proto = Attachment(
+        name="spaces/S/messages/M/attachments/A",
+        content_name="doc.docx",
+        drive_data_ref=DriveDataRef(drive_file_id="d9"),
+    )
+    ref = AttachmentRef.from_proto(proto)
+    assert ref.is_drive
+    assert ref.drive_file_id == "d9"
+    assert ref.filename == "doc.docx"
+
+
+def test_attachment_ref_snapshots_raw_mapping() -> None:
+    from collections.abc import Mapping
+    from typing import cast
+
+    raw: dict[str, object] = {
+        "attachmentDataRef": {"resourceName": "media/1"},
+        "contentName": "a.png",
+    }
+    ref = AttachmentRef.from_mapping(raw)
+    inner = raw["attachmentDataRef"]
+    assert isinstance(inner, dict)
+    inner["resourceName"] = "media/evil"
+    assert ref.resource_name == "media/1"
+    ref_data = cast(Mapping[str, object], ref.raw["attachmentDataRef"])
+    assert ref_data["resourceName"] == "media/1"
+
+
 def test_from_proto_uploaded() -> None:
     proto = Attachment(
         name="spaces/S/messages/M/attachments/A",

@@ -169,7 +169,7 @@ async def test_upload_attachment_missing_media_extra(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setitem(sys.modules, "googleapiclient", None)
-    with pytest.raises(ChatAPIError, match="chattice\\[media\\]"):
+    with pytest.raises(ChatAPIError, match=r"chattice\[media\]"):
         await _bot(_UserCreds()).upload_attachment(
             "S1", InputFile.from_bytes(b"x", filename="x.png")
         )
