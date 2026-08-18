@@ -24,9 +24,7 @@ from chattice.media import InputFile
 path = f"{os.path.abspath(os.getcwd())}/static/out3.png"
 imgkit.from_string(body, path, options={"xvfb": ""})
 
-await message.reply(
-    attachments=[InputFile.from_path(path)]
-)
+await message.reply(attachments=[InputFile.from_path(path)])
 ```
 
 Chattice uploads the file through Google's media API, receives the
@@ -90,9 +88,9 @@ identity, `attachments=[InputFile(...)]` uses the user identity. Handler
 code stays the same:
 
 ```python
-await message.reply("Ordinary message")            # APP identity
+await message.reply("Ordinary message")  # APP identity
 
-await message.reply(                                # USER identity upload
+await message.reply(  # USER identity upload
     attachments=[InputFile.from_path("photo.png")]  # then create
 )
 ```
@@ -165,7 +163,7 @@ The symmetric metadata flow:
 ```python
 uploaded = await bot.upload_attachment(space, InputFile.from_path("x.pdf"))
 metadata = await bot.get_attachment("spaces/.../messages/.../attachments/...")
-content = await bot.download_attachment(metadata)      # or metadata.resource_name
+content = await bot.download_attachment(metadata)  # or metadata.resource_name
 ```
 
 `get_attachment` requires app auth + `chat.bot`

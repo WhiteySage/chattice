@@ -23,9 +23,7 @@ async def report(message: MessageEvent) -> Message:
         path,
         options={"xvfb": ""},
     )
-    return await message.reply(
-        attachments=[InputFile.from_path(path)]
-    )
+    return await message.reply(attachments=[InputFile.from_path(path)])
 ```
 
 PDF and arbitrary bytes work identically:

@@ -67,9 +67,7 @@ CHATTICE:
 ```python
 from chattice.media import InputFile
 
-await message.reply(
-    attachments=[InputFile.from_path("report.pdf")]
-)
+await message.reply(attachments=[InputFile.from_path("report.pdf")])
 ```
 
 One canonical `InputFile` covers every local artifact — there are no
