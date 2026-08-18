@@ -176,25 +176,26 @@ class InputFile:
             raise ValueError("attachment grew past the 200 MB Google upload limit")
 
     def read(self) -> bytes:
-        """Read the content on the upload path (validates first).
+        """Read the content on the upload path (open-once validation).
 
-        The path is opened with ``O_NOFOLLOW`` and re-checked from the
-        open descriptor so a file swapped for a symlink/FIFO between the
-        check and the open cannot hang or bypass the regular-file and
-        size guards.
+        The file is opened a SINGLE time and every check runs against
+        that descriptor: ``open(path)`` → ``fstat(fd)`` → regular-file
+        and size guards → read from the same ``fd``. There is no
+        ``stat(path)`` → later ``open(path)`` window left to race.
+        ``O_NONBLOCK`` makes opening a FIFO (or a path swapped onto one)
+        fail closed instead of hanging the worker: the descriptor check
+        rejects it as non-regular. Regular symlinks are honored.
         """
         if self._data is not None:
             return self._data
         raw = self._path
         assert raw is not None  # guarded by __post_init__
-        flags = os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0)
+        flags = os.O_RDONLY | getattr(os, "O_NONBLOCK", 0)
         fd = os.open(raw, flags)
         try:
             file_stat = os.fstat(fd)
             if not stat.S_ISREG(file_stat.st_mode):
-                raise ValueError(
-                    f"attachment path stopped being a regular file: {raw!r}"
-                )
+                raise ValueError(f"attachment path is not a regular file: {raw!r}")
             if file_stat.st_size > MAX_ATTACHMENT_SIZE_BYTES:
                 raise ValueError("attachment grew past the 200 MB Google upload limit")
             chunks: list[bytes] = []

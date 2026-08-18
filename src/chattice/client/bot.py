@@ -218,6 +218,12 @@ class Bot:
         self._credential_task: asyncio.Task[Credentials | None] | None = None
         self._user_credential_task: asyncio.Task[Credentials | None] | None = None
         self._init_task: asyncio.Task[ChatServiceAsyncClient] | None = None
+        # The USER identity has its own cached client: attachment messages
+        # must be created with the SAME USER credentials that uploaded
+        # them (live-verified: an APP-authenticated create cannot consume
+        # a USER-uploaded attachment — Google rejects the handoff).
+        self._user_client: ChatServiceAsyncClient | None = None
+        self._user_init_task: asyncio.Task[ChatServiceAsyncClient] | None = None
 
     def _classify(self, credentials: Credentials | None) -> AuthMode | None:
         if credentials is None:
@@ -369,6 +375,65 @@ class Bot:
         )
         return self._client
 
+    def _build_user_client(self, credentials: Credentials) -> ChatServiceAsyncClient:
+        """Build the cached USER Chat client.
+
+        Mirrors the APP client construction: an injected transport (used
+        by the testing toolkit) carries no identity, so the same fake
+        transport may back both clients in tests. In production the USER
+        client gets its own real gRPC-asyncio transport.
+        """
+        if self._transport is not None:
+            self._user_client = ChatServiceAsyncClient(transport=self._transport)
+            return self._user_client
+        self._user_client = ChatServiceAsyncClient(
+            credentials=credentials,
+            transport=_GRPC_ASYNCIO,
+        )
+        return self._user_client
+
+    async def _get_user_client_async(self) -> ChatServiceAsyncClient:
+        """Single-flight async USER client initialization .
+
+        Same contract as the APP path: concurrent first attachment sends
+        share ONE construction task, a waiter's cancellation never kills
+        the shared construction, and a failed construction is not cached
+        (provider errors stay retryable).
+        """
+        client = self._user_client
+        if client is not None:
+            return client
+        task = self._user_init_task
+        if task is None:
+            task = asyncio.create_task(self._initialize_user_client())
+            self._user_init_task = task
+        try:
+            return await asyncio.shield(task)
+        except asyncio.CancelledError:
+            raise
+        except Exception:
+            if self._user_init_task is task:
+                self._user_init_task = None
+            raise
+
+    async def _initialize_user_client(self) -> ChatServiceAsyncClient:
+        """Resolve USER credentials and build the client; never publish after close."""
+        if self._closed:
+            raise ChatAPIError("Bot is closed; create a new instance")
+        credentials = await self._resolve_user_credentials_async()
+        if credentials is None:
+            raise CapabilityNotSupported(
+                "Sending message attachments requires USER authentication for "
+                "both media.upload and messages.create. Configure "
+                "user_credentials_provider=... — UserCredentialsProvider, or "
+                "DelegatedUserCredentialsProvider for domain-wide delegation."
+            )
+        if self._closed:
+            # close() began while the provider ran off-loop: the client
+            # must NOT be published after terminal close.
+            raise ChatAPIError("Bot is closed; create a new instance")
+        return self._build_user_client(credentials)
+
     async def _resolve_credentials_async(self) -> Credentials | None:
         """Async-safe single-flight credential resolution .
 
@@ -454,6 +519,7 @@ class Bot:
             self._credential_task,
             self._user_credential_task,
             self._init_task,
+            self._user_init_task,
         ):
             if task is None:
                 continue
@@ -468,15 +534,22 @@ class Bot:
                 raise
             except ChatAPIError:
                 pass  # aborted by our own close — nothing to close
-        client = self._client
-        if client is None:
-            return
-        closer = getattr(client.transport, "close", None)
-        if closer is None:
-            return
-        result = closer()
-        if inspect.isawaitable(result):
-            await result
+        # Close every initialized client exactly once. The injected test
+        # transport may back both clients; each transport is closed once.
+        closed_transports: set[object] = set()
+        for client in (self._client, self._user_client):
+            if client is None:
+                continue
+            transport = client.transport
+            if transport in closed_transports:
+                continue
+            closed_transports.add(transport)
+            closer = getattr(transport, "close", None)
+            if closer is None:
+                continue
+            result = closer()
+            if inspect.isawaitable(result):
+                await result
 
     async def __aenter__(self) -> Bot:
         return self
@@ -514,11 +587,36 @@ class Bot:
         # outbound constraint is validated BEFORE any client work, so
         # rejected requests make zero transport calls and privacy intent
         # can never silently become public.
-        mode = await self._auth_mode_async()
+        # Attachment messages are USER-authenticated end to end: Google
+        # live-verified that an APP-authenticated create cannot consume
+        # an attachment uploaded by the USER identity. The whole send
+        # (media.upload AND messages.create) therefore runs on the USER
+        # client; the APP client is not used for attachment sends.
+        has_attachments = bool(attachments)
+        # Combination guards first: these are identity-independent and
+        # must reject before any identity resolution.
+        if has_attachments:
+            if private_to is not None:
+                raise ChatAPIError(
+                    "private_to cannot be combined with attachments "
+                    "(Google: private messages omit attachments)."
+                )
+            if accessory_widgets:
+                raise ChatAPIError(
+                    "attachments cannot be combined with accessory widgets "
+                    "(Google restriction)."
+                )
+        mode = AuthMode.USER if has_attachments else await self._auth_mode_async()
         if notify is not None:
             if notify not in ("force", "silent"):
                 raise ChatAPIError(
                     f"notify must be 'force', 'silent', or None; got {notify!r}"
+                )
+            if has_attachments:
+                raise CapabilityNotSupported(
+                    "notify (createMessageNotificationOptions) requires app "
+                    "authentication and cannot be combined with attachments: "
+                    "attachment messages are USER-authenticated."
                 )
             if mode is not AuthMode.APP:
                 raise CapabilityNotSupported(
@@ -539,39 +637,22 @@ class Bot:
                     "(Google: privateMessageViewer is not compatible with "
                     "accessory widgets)."
                 )
-        if attachments:
-            if viewer is not None:
-                raise ChatAPIError(
-                    "private_to cannot be combined with attachments "
-                    "(Google: private messages omit attachments)."
-                )
-            if accessory_widgets:
-                raise ChatAPIError(
-                    "attachments cannot be combined with accessory widgets "
-                    "(Google restriction)."
-                )
         if card is not None and mode is AuthMode.USER:
             raise CapabilityNotSupported(
                 "User-auth card creation is a Google Developer Preview "
                 "(PreviewFeature.USER_AUTH_CARDS); use app auth or "
                 "Bot.raw_client for preview surfaces."
             )
-        capabilities = await self._capabilities_async()
-        if capabilities is not None:
-            capabilities.require(OutboundCapability.MESSAGE_CREATE)
-        if accessory_widgets:
-            # Documented Google rule: accessory widgets require APP auth.
-            if mode is not AuthMode.APP:
-                raise CapabilityNotSupported(
-                    "Accessory widgets require app authentication (chat.bot)."
-                )
         # one resource-name policy — bare IDs canonicalize to
         # spaces/{id} BEFORE any transport work.
         parent = _canonical_space(space)
         # Attachments: the WHOLE set is preflighted before the first
         # upload (paths, sizes, filenames, auth and space consistency),
         # then uploaded sequentially in the caller's order — parallel
-        # uploads would leave no rollback story when one fails.
+        # uploads would leave no rollback story when one fails. The
+        # preflight is identity-independent and runs BEFORE identity
+        # resolution so deterministic local rejections (e.g. cross-Space
+        # UploadedAttachment) never depend on which credentials exist.
         attached: list[Attachment] = []
         if attachments:
             for item in attachments:
@@ -586,6 +667,48 @@ class Bot:
                         )
                 else:
                     item.validate()  # re-check path/file state, no reads
+        if has_attachments:
+            # Capability preflight against the EFFECTIVE (USER) identity:
+            # the final messages.create is USER-authenticated, so APP
+            # capabilities must not satisfy it. Fail locally, before any
+            # media I/O, when the USER identity or its scopes are absent.
+            user_credentials = await self._resolve_user_credentials_async()
+            if user_credentials is None:
+                raise CapabilityNotSupported(
+                    "Sending message attachments requires USER authentication "
+                    "for both media.upload and messages.create. Configure "
+                    "user_credentials_provider=... — UserCredentialsProvider, "
+                    "or DelegatedUserCredentialsProvider for domain-wide "
+                    "delegation."
+                )
+            if self._classify(user_credentials) is AuthMode.APP:
+                raise CapabilityNotSupported(
+                    "the user credentials provider returned service-account "
+                    "credentials; Google treats attachment sends as "
+                    "USER-authenticated calls — use "
+                    "DelegatedUserCredentialsProvider (with_subject) to "
+                    "impersonate a Workspace user through domain-wide delegation."
+                )
+            user_capabilities = OutboundCapabilities.resolve(
+                AuthMode.USER,
+                scopes=_credential_scopes(AuthMode.USER, user_credentials),
+            )
+            user_capabilities.require(OutboundCapability.MESSAGE_CREATE)
+            if attachments is not None and any(
+                isinstance(item, InputFile) for item in attachments
+            ):
+                user_capabilities.require(OutboundCapability.ATTACHMENT_UPLOAD)
+        else:
+            capabilities = await self._capabilities_async()
+            if capabilities is not None:
+                capabilities.require(OutboundCapability.MESSAGE_CREATE)
+        if accessory_widgets:
+            # Documented Google rule: accessory widgets require APP auth.
+            if mode is not AuthMode.APP:
+                raise CapabilityNotSupported(
+                    "Accessory widgets require app authentication (chat.bot)."
+                )
+        if attachments:
             for item in attachments:
                 if isinstance(item, UploadedAttachment):
                     attached.append(
@@ -646,9 +769,12 @@ class Bot:
             options.notification_type = cast(Any, notification_type)
             request.create_message_notification_options = options
         try:
-            return await (await self._get_client_async()).create_message(
-                request=request, timeout=timeout
+            client = (
+                await self._get_user_client_async()
+                if has_attachments
+                else await self._get_client_async()
             )
+            return await client.create_message(request=request, timeout=timeout)
         except api_core_exceptions.GoogleAPICallError as error:
             raise wrap_api_error(error) from error
 

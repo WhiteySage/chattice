@@ -234,6 +234,28 @@ to PyPI.
   endpoints; the GAPIC client cannot carry a binary media body).
 - Added the `Files, Images & Media` guide.
 
+## [0.14.0b6] — attachment identity correctness, media preflight hardening
+
+- Fixed attachment message identity routing: `send_message(attachments=...)`
+  now performs the WHOLE send — `media.upload` AND the final
+  `messages.create` — with the USER identity (live-verified: an
+  APP-authenticated create cannot consume a USER-uploaded attachment;
+  the sender of an attachment message is the authenticated/impersonated
+  USER). The Bot gained a cached single-flight USER Chat client that
+  closes together with the APP client; effective-identity capability
+  preflight rejects `notify`/`card` combinations with attachments
+  locally.
+- Fixed the `InputFile` read path TOCTOU window: files are opened once
+  with `O_NONBLOCK` and re-checked from the descriptor (regular symlinks
+  are honored; a path swapped to a FIFO fails closed instead of hanging).
+- Added batch Workspace Event type constants
+  (`message/reaction/membership.v1.batch*`, `space/spaceReadState/
+  threadReadState.v1.batchUpdated`) alongside the forward-compatible
+  parser.
+- Documented the USER end-to-end attachment send semantics (sender =
+  HUMAN), corrected the DWD guidance, and added an ordinary-OAuth
+  development recipe.
+
 ## Unreleased
 
 - Added the pure Google Chat interaction adapter for all eight stable event

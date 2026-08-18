@@ -189,4 +189,4 @@ def test_public_api_exports_are_intentional() -> None:
     import chattice
 
     assert chattice.__all__ == ["Dispatcher", "F", "Router", "__version__"]
-    assert chattice.__version__ == "0.14.0b5"
+    assert chattice.__version__ == "0.14.0b6"

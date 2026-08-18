@@ -10,7 +10,7 @@ never prevents access to the official client or raw payload.
 | `ThreadRef` | `Thread` nested in Message | resource name or `threadKey` | `event.raw` |
 | handler `return str/Card` | synchronous interaction response | HTTP, deadline-limited | return mapping / `RawInteractionResponse` |
 | `Bot.send_message` | `spaces.messages.create` | app `chat.bot`; user any supported create scope | `Bot.raw_client.create_message` |
-| `Bot.send_message(attachments=...)` | `media.upload` → `spaces.messages.create` | upload: USER only; create: as above | `Bot.raw_client` (create), REST media extra |
+| `Bot.send_message(attachments=...)` | `media.upload` → `spaces.messages.create` | USER only for the WHOLE send: upload AND create (sender = HUMAN) | `Bot.raw_client` (create), REST media extra |
 | `Bot.upload_attachment` | `media.upload` | USER only (`chat.messages.create`/`chat.messages`/`chat.import`) | `chattice[media]` REST client |
 | `Bot.download_attachment` | `media.download` | app `chat.bot`; user `chat.messages.readonly`/`chat.messages` | REST media extra |
 | `Bot.get_attachment` | `spaces.messages.attachments.get` | APP only (`chat.bot`) | `Bot.raw_client.get_attachment` |

@@ -15,6 +15,9 @@ site/
 
 # Local development credentials (dogfood service-account keys)
 .secrets/
+token.json
+oauth-client.json
+service-account*.json
 
 # Internal maintainer material — never part of the public tree.
 .agent/

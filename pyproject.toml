@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "chattice"
-version = "0.14.0b5"
+version = "0.14.0b6"
 description = "Async typed event framework for Google Chat apps"
 readme = "README.md"
 requires-python = ">=3.11"

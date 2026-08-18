@@ -353,7 +353,7 @@ wheels = [
 
 [[package]]
 name = "chattice"
-version = "0.14.0b5"
+version = "0.14.0b6"
 source = { editable = "." }
 dependencies = [
     { name = "google-apps-chat" },

@@ -27,8 +27,12 @@ The three media capabilities follow the same tri-state model:
 | `ATTACHMENT_METADATA_GET` (`spaces.messages.attachments.get`) | ✅ | ❌ | app: `chat.bot` |
 
 A dual-identity Bot resolves these against the identity the operation
-needs: `Bot.upload_attachment` and `attachments=[InputFile(...)]` use
-the USER identity, `Bot.get_attachment` uses the APP identity,
+needs: `Bot.upload_attachment` uses the USER identity, and
+`attachments=[InputFile(...)]` sends use the USER identity for the
+**whole operation** — `media.upload` AND the final `messages.create`
+run on the USER client (an APP-authenticated create cannot consume a
+USER-uploaded attachment; the cross-identity handoff is rejected by
+Google). `Bot.get_attachment` uses the APP identity,
 `Bot.download_attachment` accepts either. See
 [Files, Images & Media](files-media.md).
 
@@ -62,6 +66,35 @@ role, policy, or resource state. Chattice surfaces this as
 | `ChatUnauthenticatedError` | outbound credential was rejected | key/token validity and refresh |
 | `CapabilityNotSupported` | configuration is deterministically unsupported | auth mode, known scopes, transport/event, Preview opt-in |
 | `ChatPermissionDeniedError` | Google authenticated the call but denied it | scope grant, app membership, role, admin approval, feature enrollment |
+
+## User auth: REQUEST_CONFIG response
+
+When a user-auth application receives an interaction without a stored OAuth
+token (or with an expired grant it cannot refresh), the documented Google
+answer is a synchronous `REQUEST_CONFIG` response carrying an authorization
+URL. Chattice does not build typed helpers for this: the raw response hatch
+is the API, and the OAuth authorization flow itself belongs to the
+application.
+
+```python
+from chattice.transports.http import RawInteractionResponse
+
+
+@router.message()
+async def needs_auth(message: MessageEvent) -> RawInteractionResponse:
+    return RawInteractionResponse(
+        {
+            "actionResponse": {
+                "type": "REQUEST_CONFIG",
+                "authUrl": "https://accounts.google.com/o/oauth2/v2/auth?...",
+            }
+        }
+    )
+```
+
+Google drives the user through `authUrl`; the application then completes the
+code exchange, stores the resulting credentials, and returns them through a
+`UserCredentialsProvider` (see [Files, Images & Media](files-media.md)).
 
 ## Preview opt-in
 
