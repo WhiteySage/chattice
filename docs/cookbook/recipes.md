@@ -80,6 +80,32 @@ Bind the instance to a button with `Button(..., action=ApprovalAction(...))`
 and route it with `ApprovalAction.filter()`. Re-fetch the request and authorize
 the actor before mutating anything.
 
+## Reactions (raw_client)
+
+Reactions are not a Chattice high-level API: the raw SDK client is the
+documented boundary. Google serves reactions with **user authentication**
+(`chat.messages.reactions` / `chat.messages.reactions.readonly`), so
+configure the Bot with a user identity (OAuth or DWD) before calling.
+
+```python
+from google.apps.chat_v1.types import Emoji, Reaction
+
+
+# Add a 🔥 reaction to a message.
+await bot.raw_client.create_reaction(
+    parent="spaces/SPACE/messages/MSG",
+    reaction=Reaction(emoji=Emoji(unicode="🔥")),
+)
+
+# List reactions on a message (async pager).
+pager = await bot.raw_client.list_reactions(
+    parent="spaces/SPACE/messages/MSG", page_size=50
+)
+async for page in pager:
+    for reaction in page.reactions:
+        print(reaction.emoji.unicode)
+```
+
 ## Incident workflow
 
 Use a Space and Thread for collaboration, a Card for status, Actions for

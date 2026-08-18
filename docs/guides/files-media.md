@@ -6,7 +6,7 @@ instead of pretending they are one feature:
 | Surface | What it is | Google primitive | Auth |
 |---|---|---|---|
 | **Card Image** | A picture rendered inside a card | Cards v2 `Image` | any card-sending auth |
-| **Message attachment** | A file uploaded to Chat and attached to a message | `media.upload` → `attachmentDataRef` → `messages.create` | **USER auth** for the upload |
+| **Message attachment** | A file uploaded to Chat and attached to a message | `media.upload` → `attachmentDataRef` → `messages.create` | **USER auth for the WHOLE send** — upload AND the final `messages.create` |
 
 A local PNG/PDF/whatever is an **attachment**, never a Card Image. Card
 Images are URL-only (HTTPS). There is no `data:` URL, `file://` path, or
@@ -51,13 +51,18 @@ Multiple files are preflighted together (paths, sizes, filenames, auth,
 space consistency) before the first upload, then uploaded sequentially
 in the order you passed them.
 
-!!! warning "Media upload requires USER authentication"
-    `media.upload` accepts **user authentication only**. A
-    service-account / app-auth Bot **cannot upload a local file** — this
-    is a Google restriction, not a Chattice one, and Chattice fails
-    locally with an actionable error instead of a confusing network
-    failure. For an app-auth UI picture use a hosted HTTPS Card Image
-    instead.
+!!! warning "Attachment messages are USER-authenticated end to end"
+    A local Chat attachment **cannot currently be published as an
+    APP-authenticated bot message** through Chattice's stable media flow.
+    Google Chat requires USER authentication for `media.upload`, and live
+    integration testing shows an APP-authenticated `messages.create`
+    cannot consume an attachment uploaded by the USER identity — the
+    cross-identity handoff is rejected by Google
+    ("Caller does not have permission to access requested attachment").
+    Chattice therefore performs the **whole attachment send** — upload
+    AND the final `messages.create` — with the USER credentials, and
+    fails locally with an actionable error when no USER identity exists.
+    For an app-auth UI picture use a hosted HTTPS Card Image instead.
 
 ### One Bot, two identities
 
@@ -84,14 +89,16 @@ bot = Bot(
 ```
 
 The Bot picks the identity per operation: ordinary sends use the app
-identity, `attachments=[InputFile(...)]` uses the user identity. Handler
-code stays the same:
+identity, `attachments=[InputFile(...)]` uses the user identity for the
+**entire send** — `media.upload` AND the final `messages.create` run on
+the USER client; the APP client is not used for attachment messages.
+Handler code stays the same:
 
 ```python
-await message.reply("Ordinary message")  # APP identity
+await message.reply("Ordinary message")  # APP identity, sender = Chat app
 
-await message.reply(  # USER identity upload
-    attachments=[InputFile.from_path("photo.png")]  # then create
+await message.reply(  # USER identity: upload AND create
+    attachments=[InputFile.from_path("photo.png")]
 )
 ```
 
@@ -99,14 +106,57 @@ await message.reply(  # USER identity upload
 Delegation: the service account impersonates a configured user
 (`with_subject`), and Google treats those calls as user authentication.
 This requires the Workspace administrator to configure the delegation
-and OAuth scopes. If your application instead has real end-user OAuth
-tokens, pass a `UserCredentialsProvider` — acquisition, consent and
-token storage stay the application's concern either way.
+and OAuth scopes. DWD is the unattended Workspace/server option — it
+makes the attachment send a call on behalf of the impersonated
+technical user; it does **not** magically turn the attachment message
+into an APP/bot-authenticated message. For production, prefer a
+dedicated technical Workspace user over silently using a developer's
+personal account. Ordinary end-user OAuth remains equally valid: pass a
+`UserCredentialsProvider` (see the development recipe below) —
+acquisition, consent and token storage stay the application's concern
+either way.
 
 !!! warning "User-auth calls act on behalf of a user"
     A message created through a user-authenticated call is attributable
-    to that user. Chattice automates the credential switch but never
-    hides this semantic.
+    to that user — an attachment message is sent **from the USER
+    identity, `sender.type = HUMAN`**. With DWD the sender is the
+    impersonated Workspace user; with ordinary OAuth it is the
+    OAuth-authorized user. Chattice automates the credential switch but
+    never hides this semantic.
+
+### Ordinary USER OAuth (local development)
+
+DWD is not the only USER-auth path. For local development an application
+may obtain ordinary OAuth credentials with Google's normal tooling and
+inject them into the same dual-identity Bot:
+
+```python
+from google.oauth2.credentials import Credentials as UserCredentials
+
+from chattice.auth import ServiceAccountCredentialsProvider, UserCredentialsProvider
+from chattice.client import Bot
+
+# Obtained by the APPLICATION through Google's OAuth flow (or a CLI
+# helper); Chattice never acquires or stores OAuth tokens itself.
+user_credentials = UserCredentials.from_authorized_user_info(
+    {
+        "client_id": "...",
+        "client_secret": "...",
+        "refresh_token": "...",
+        "scopes": ["https://www.googleapis.com/auth/chat.messages"],
+    }
+)
+
+bot = Bot(
+    app_credentials_provider=ServiceAccountCredentialsProvider.from_service_account_file(
+        "/run/secrets/chat-service-account.json"
+    ),
+    user_credentials_provider=UserCredentialsProvider(user_credentials),
+)
+```
+
+Both providers produce the same behavior: plain sends use APP auth,
+attachment sends use the USER identity end to end.
 
 ## Show a hosted image in a Card
 
@@ -174,7 +224,12 @@ USER or APP scopes; upload is USER-only.
 
 Before any network call, Chattice validates the whole attachment set:
 
-- app auth + `InputFile` → local error (see the warning above)
+- no USER identity on the Bot + attachments → local error (the whole
+  attachment send is USER-authenticated, see the warning above)
+- `notify` + attachments → local error
+  (`createMessageNotificationOptions` is APP-auth-specific)
+- `card` + attachments → local error (USER-auth card creation is a
+  Developer Preview; attachment sends are USER-authenticated)
 - `private_to` + attachments → local error (Google: private messages omit attachments)
 - `accessory_widgets` + attachments → local error (Google restriction)
 - missing path / directory / FIFO / device instead of a regular file

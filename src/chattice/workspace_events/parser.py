@@ -28,7 +28,7 @@ class WorkspaceEventType:
 
     Sources: https://developers.google.com/workspace/events/guides/events-chat
     and https://developers.google.com/workspace/events/guides/events-lifecycle
-    (verified 2026-08-15).
+    (verified 2026-08-18, including batch event types).
     """
 
     MESSAGE_CREATED = "google.workspace.chat.message.v1.created"
@@ -44,6 +44,25 @@ class WorkspaceEventType:
     SPACE_READ_STATE_UPDATED = "google.workspace.chat.spaceReadState.v1.updated"
     THREAD_READ_STATE_UPDATED = "google.workspace.chat.threadReadState.v1.updated"
     AVAILABILITY_UPDATED = "google.workspace.chat.availability.v1.updated"
+    # Batch event types (output only): delivered automatically for any
+    # subscribed type, never specified when creating a subscription.
+    # No space.v1.batchDeleted / batch availability / batch read-state
+    # creation-deletion types are documented.
+    MESSAGE_BATCH_CREATED = "google.workspace.chat.message.v1.batchCreated"
+    MESSAGE_BATCH_UPDATED = "google.workspace.chat.message.v1.batchUpdated"
+    MESSAGE_BATCH_DELETED = "google.workspace.chat.message.v1.batchDeleted"
+    REACTION_BATCH_CREATED = "google.workspace.chat.reaction.v1.batchCreated"
+    REACTION_BATCH_DELETED = "google.workspace.chat.reaction.v1.batchDeleted"
+    MEMBERSHIP_BATCH_CREATED = "google.workspace.chat.membership.v1.batchCreated"
+    MEMBERSHIP_BATCH_UPDATED = "google.workspace.chat.membership.v1.batchUpdated"
+    MEMBERSHIP_BATCH_DELETED = "google.workspace.chat.membership.v1.batchDeleted"
+    SPACE_BATCH_UPDATED = "google.workspace.chat.space.v1.batchUpdated"
+    SPACE_READ_STATE_BATCH_UPDATED = (
+        "google.workspace.chat.spaceReadState.v1.batchUpdated"
+    )
+    THREAD_READ_STATE_BATCH_UPDATED = (
+        "google.workspace.chat.threadReadState.v1.batchUpdated"
+    )
     SUBSCRIPTION_SUSPENDED = "google.workspace.events.subscription.v1.suspended"
     SUBSCRIPTION_EXPIRATION_REMINDER = (
         "google.workspace.events.subscription.v1.expirationReminder"

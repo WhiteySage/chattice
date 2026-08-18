@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 import pytest
@@ -106,6 +107,45 @@ def test_read_rejects_grown_file(
     file = InputFile.from_path(str(path))
     path.write_bytes(b"y" * 200)
     with pytest.raises(ValueError, match="grew"):
+        file.read()
+
+
+def test_read_honors_symlink_to_regular_file(tmp_path: Path) -> None:
+    # Regular symlinks are a normal filesystem pattern; open-once
+    # validation reads the target, it does not reject the link itself.
+    target = tmp_path / "real.png"
+    target.write_bytes(b"\x89PNG\r\n")
+    link = tmp_path / "link.png"
+    link.symlink_to(target)
+    file = InputFile.from_path(str(link))
+    assert file.read() == b"\x89PNG\r\n"
+
+
+def test_read_rejects_swapped_in_fifo(tmp_path: Path) -> None:
+    # The preflight saw a regular file; the path became a FIFO before
+    # the upload read. O_NONBLOCK open + fstat must fail closed with a
+    # ValueError instead of hanging the worker in open().
+    path = tmp_path / "x.png"
+    path.write_bytes(b"x")
+    file = InputFile.from_path(str(path))
+    path.unlink()
+    os.mkfifo(str(path))
+    with pytest.raises(ValueError, match="regular file"):
+        file.read()
+
+
+def test_read_rejects_symlink_swapped_to_fifo(tmp_path: Path) -> None:
+    # The symlink pointed at a regular file when InputFile was built;
+    # its target became a FIFO before the upload read. The open-once
+    # descriptor check must reject it without hanging.
+    target = tmp_path / "real.png"
+    target.write_bytes(b"x")
+    link = tmp_path / "link.png"
+    link.symlink_to(target)
+    file = InputFile.from_path(str(link))
+    target.unlink()
+    os.mkfifo(str(target))
+    with pytest.raises(ValueError, match="regular file"):
         file.read()
 
 

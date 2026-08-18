@@ -124,6 +124,53 @@ def test_type_constants() -> None:
     assert WorkspaceEventType.SPACE_UPDATED == "google.workspace.chat.space.v1.updated"
 
 
+def test_batch_type_constants() -> None:
+    assert (
+        WorkspaceEventType.MESSAGE_BATCH_CREATED
+        == "google.workspace.chat.message.v1.batchCreated"
+    )
+    assert (
+        WorkspaceEventType.MESSAGE_BATCH_UPDATED
+        == "google.workspace.chat.message.v1.batchUpdated"
+    )
+    assert (
+        WorkspaceEventType.MESSAGE_BATCH_DELETED
+        == "google.workspace.chat.message.v1.batchDeleted"
+    )
+    assert (
+        WorkspaceEventType.REACTION_BATCH_CREATED
+        == "google.workspace.chat.reaction.v1.batchCreated"
+    )
+    assert (
+        WorkspaceEventType.REACTION_BATCH_DELETED
+        == "google.workspace.chat.reaction.v1.batchDeleted"
+    )
+    assert (
+        WorkspaceEventType.MEMBERSHIP_BATCH_CREATED
+        == "google.workspace.chat.membership.v1.batchCreated"
+    )
+    assert (
+        WorkspaceEventType.MEMBERSHIP_BATCH_UPDATED
+        == "google.workspace.chat.membership.v1.batchUpdated"
+    )
+    assert (
+        WorkspaceEventType.MEMBERSHIP_BATCH_DELETED
+        == "google.workspace.chat.membership.v1.batchDeleted"
+    )
+    assert (
+        WorkspaceEventType.SPACE_BATCH_UPDATED
+        == "google.workspace.chat.space.v1.batchUpdated"
+    )
+    assert (
+        WorkspaceEventType.SPACE_READ_STATE_BATCH_UPDATED
+        == "google.workspace.chat.spaceReadState.v1.batchUpdated"
+    )
+    assert (
+        WorkspaceEventType.THREAD_READ_STATE_BATCH_UPDATED
+        == "google.workspace.chat.threadReadState.v1.batchUpdated"
+    )
+
+
 # --- Official Pub/Sub binding (parse_workspace_envelope) ---
 
 

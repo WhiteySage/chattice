@@ -179,7 +179,7 @@ these promises:
 | `Bot.upload_attachment()`      | USER-auth media upload (`InputFile` → `UploadedAttachment`) | 0.14.0b5 |
 | `Bot.download_attachment()`    | Media download (USER or APP; bytes or Path)    | 0.14.0b5 |
 | `Bot.get_attachment()`         | Attachment metadata (APP auth + chat.bot)      | 0.14.0b5 |
-| `Bot.send_message(..., attachments=)` | Create with uploaded/local attachments  | 0.14.0b5 |
+| `Bot.send_message(..., attachments=)` | Create with uploaded/local attachments — USER identity end to end (sender = HUMAN)  | 0.14.0b5 |
 
 ## `chattice.cards`
 
