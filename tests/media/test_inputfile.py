@@ -118,3 +118,19 @@ def test_from_bytes_accepts_bytearray_snapshot() -> None:
     file = InputFile.from_bytes(source, filename="x.bin")
     source[0] = ord("X")
     assert file.read() == b"data"
+
+
+def test_raw_constructor_without_source_rejected() -> None:
+    with pytest.raises(ValueError, match="from_path"):
+        InputFile(filename="x.png", content_type="image/png")
+
+
+def test_uploaded_attachment_snapshots_mapping() -> None:
+    from chattice.media import UploadedAttachment
+
+    ref = {"resourceName": "media/r1"}
+    uploaded = UploadedAttachment(
+        space="spaces/A", filename="x.png", attachment_data_ref=ref
+    )
+    ref["resourceName"] = "media/evil"
+    assert uploaded.attachment_data_ref["resourceName"] == "media/r1"

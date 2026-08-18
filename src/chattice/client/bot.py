@@ -222,6 +222,10 @@ class Bot:
     def _classify(self, credentials: Credentials | None) -> AuthMode | None:
         if credentials is None:
             return None
+        if getattr(credentials, "_subject", None):
+            # Domain-wide delegation: a service account impersonating a
+            # user (with_subject) acts as USER authentication.
+            return AuthMode.USER
         if hasattr(credentials, "signer"):  # service account
             return AuthMode.APP
         if getattr(credentials, "refresh_token", None):
@@ -400,29 +404,6 @@ class Bot:
         self._resolved_set = True
         return self._resolved_credentials
 
-    def _resolve_user_credentials(self) -> Credentials | None:
-        """Resolve the USER identity (media upload, user-scoped operations).
-
-        A dual-identity Bot takes it from ``user_credentials_provider``;
-        a single-identity Bot falls back to its only credentials when
-        they classify as USER — otherwise the user identity is simply
-        absent and user-only operations fail locally with an actionable
-        message.
-        """
-        if self._resolved_user_set:
-            return self._resolved_user_credentials
-        if self._closed:
-            raise ChatAPIError("Bot is closed; create a new instance")
-        if self._user_credentials_provider is not None:
-            self._resolved_user_credentials = self._user_credentials_provider()
-        else:
-            single = self._resolve_credentials()
-            self._resolved_user_credentials = (
-                single if self._classify(single) is AuthMode.USER else None
-            )
-        self._resolved_user_set = True
-        return self._resolved_user_credentials
-
     async def _resolve_user_credentials_async(self) -> Credentials | None:
         """Async-safe single-flight USER identity resolution."""
         task = self._user_credential_task
@@ -595,7 +576,10 @@ class Bot:
         if attachments:
             for item in attachments:
                 if isinstance(item, UploadedAttachment):
-                    if item.space != parent:
+                    # Canonicalize before comparing so a bare space id
+                    # stored on a hand-built UploadedAttachment is not
+                    # falsely rejected as a different space.
+                    if _canonical_space(item.space) != parent:
                         raise ChatAPIError(
                             "UploadedAttachment is scoped to space "
                             f"{item.space!r}; cannot send it in {parent!r}"
@@ -763,10 +747,19 @@ class Bot:
             raise ChatAPIError(
                 "attachment has no attachmentDataRef.resourceName; nothing to download"
             )
-        capabilities = await self._capabilities_async()
-        if capabilities is not None:
-            capabilities.require(OutboundCapability.MEDIA_DOWNLOAD)
+        # MEDIA_DOWNLOAD accepts USER or APP: prefer the APP identity,
+        # fall back to the USER identity when the app credentials lack
+        # the download scopes (or are absent entirely).
         credentials = await self._resolve_credentials_async()
+        if credentials is not None:
+            capabilities = await self._capabilities_async()
+            if capabilities is not None:
+                try:
+                    capabilities.require(OutboundCapability.MEDIA_DOWNLOAD)
+                except CapabilityNotSupported:
+                    credentials = await self._user_credentials_for_download()
+        else:
+            credentials = await self._user_credentials_for_download()
         from chattice.media._rest import download_media
 
         def _run() -> bytes | Path:
@@ -778,6 +771,21 @@ class Bot:
             return path
 
         return await asyncio.to_thread(_run)
+
+    async def _user_credentials_for_download(self) -> Credentials:
+        user = await self._resolve_user_credentials_async()
+        if user is None or self._classify(user) is not AuthMode.USER:
+            raise CapabilityNotSupported(
+                "media.download requires app credentials (chat.bot) or user "
+                "credentials (chat.messages.readonly/chat.messages); this Bot "
+                "has neither — pass app_credentials_provider=... or "
+                "user_credentials_provider=... to Bot(...)."
+            )
+        capabilities = OutboundCapabilities.resolve(
+            AuthMode.USER, scopes=_credential_scopes(AuthMode.USER, user)
+        )
+        capabilities.require(OutboundCapability.MEDIA_DOWNLOAD)
+        return user
 
     async def get_attachment(
         self, name: str, *, timeout: float | None = None

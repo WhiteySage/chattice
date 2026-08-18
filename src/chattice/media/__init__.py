@@ -25,8 +25,9 @@ import stat
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from enum import Enum
-from pathlib import Path
-from typing import Any
+from typing import Any, cast
+
+from chattice._json_snapshot import deep_snapshot
 
 __all__ = [
     "MAX_ATTACHMENT_SIZE_BYTES",
@@ -82,6 +83,13 @@ class InputFile:
     content_type: str | None
     _path: str | None = field(default=None, repr=False)
     _data: bytes | None = field(default=None, repr=False)
+
+    def __post_init__(self) -> None:
+        if self._path is None and self._data is None:
+            raise ValueError(
+                "InputFile requires a source — use from_path() or "
+                "from_bytes() instead of the raw constructor"
+            )
 
     @classmethod
     def from_path(
@@ -156,21 +164,47 @@ class InputFile:
         if self._data is not None:
             return
         raw = self._path
-        assert raw is not None  # data-backed files returned above
-        if not os.path.exists(raw):
-            raise FileNotFoundError(f"attachment file disappeared: {raw!r}")
-        if not stat.S_ISREG(os.stat(raw).st_mode):
+        assert raw is not None  # guarded by __post_init__
+        try:
+            mode = os.stat(raw).st_mode
+            size = os.path.getsize(raw)
+        except FileNotFoundError as error:
+            raise FileNotFoundError(f"attachment file disappeared: {raw!r}") from error
+        if not stat.S_ISREG(mode):
             raise ValueError(f"attachment path stopped being a regular file: {raw!r}")
-        if os.path.getsize(raw) > MAX_ATTACHMENT_SIZE_BYTES:
+        if size > MAX_ATTACHMENT_SIZE_BYTES:
             raise ValueError("attachment grew past the 200 MB Google upload limit")
 
     def read(self) -> bytes:
-        """Read the content on the upload path (validates first)."""
+        """Read the content on the upload path (validates first).
+
+        The path is opened with ``O_NOFOLLOW`` and re-checked from the
+        open descriptor so a file swapped for a symlink/FIFO between the
+        check and the open cannot hang or bypass the regular-file and
+        size guards.
+        """
         if self._data is not None:
             return self._data
-        self.validate()
-        assert self._path is not None  # data-backed files returned above
-        return Path(self._path).read_bytes()
+        raw = self._path
+        assert raw is not None  # guarded by __post_init__
+        flags = os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0)
+        fd = os.open(raw, flags)
+        try:
+            file_stat = os.fstat(fd)
+            if not stat.S_ISREG(file_stat.st_mode):
+                raise ValueError(
+                    f"attachment path stopped being a regular file: {raw!r}"
+                )
+            if file_stat.st_size > MAX_ATTACHMENT_SIZE_BYTES:
+                raise ValueError("attachment grew past the 200 MB Google upload limit")
+            chunks: list[bytes] = []
+            while True:
+                chunk = os.read(fd, 1024 * 1024)
+                if not chunk:
+                    return b"".join(chunks)
+                chunks.append(chunk)
+        finally:
+            os.close(fd)
 
 
 @dataclass(frozen=True, slots=True)
@@ -178,13 +212,34 @@ class UploadedAttachment:
     """An attachment uploaded into one specific Space.
 
     Remembers the parent Space so a cross-Space send is rejected locally
-    instead of being dropped by Google.
+    instead of being dropped by Google. The wire mappings are deep-
+    snapshotted at construction so a frozen instance cannot be mutated
+    through a caller's dict.
     """
 
     space: str
     filename: str
     attachment_data_ref: Mapping[str, object]
     raw: Mapping[str, object] | None = None
+
+    def __post_init__(self) -> None:
+        object.__setattr__(
+            self,
+            "attachment_data_ref",
+            cast(
+                Mapping[str, object],
+                deep_snapshot(self.attachment_data_ref, where="UploadedAttachment"),
+            ),
+        )
+        if self.raw is not None:
+            object.__setattr__(
+                self,
+                "raw",
+                cast(
+                    Mapping[str, object],
+                    deep_snapshot(self.raw, where="UploadedAttachment.raw"),
+                ),
+            )
 
 
 def _ref_text(mapping: Mapping[str, object], key: str) -> str | None:
@@ -212,6 +267,30 @@ class AttachmentRef:
     thumbnail_uri: str | None = None
     download_uri: str | None = None
     raw: Mapping[str, object] = field(default_factory=dict)
+
+    def __post_init__(self) -> None:
+        # Deep-snapshot the wire mappings so the frozen facade cannot be
+        # mutated through a caller's dict after construction.
+        if self.attachment_data_ref is not None:
+            object.__setattr__(
+                self,
+                "attachment_data_ref",
+                cast(
+                    Mapping[str, object],
+                    deep_snapshot(
+                        self.attachment_data_ref,
+                        where="AttachmentRef.attachment_data_ref",
+                    ),
+                ),
+            )
+        object.__setattr__(
+            self,
+            "raw",
+            cast(
+                Mapping[str, object],
+                deep_snapshot(self.raw, where="AttachmentRef.raw"),
+            ),
+        )
 
     @property
     def is_uploaded(self) -> bool:
@@ -246,7 +325,11 @@ class AttachmentRef:
     def from_mapping(cls, mapping: Mapping[str, object]) -> AttachmentRef:
         """Build from a Google wire mapping (camelCase JSON fields)."""
         data_ref = mapping.get("attachmentDataRef")
-        attachment_data_ref = dict(data_ref) if isinstance(data_ref, Mapping) else None
+        attachment_data_ref = (
+            cast(Mapping[str, object], data_ref)
+            if isinstance(data_ref, Mapping)
+            else None
+        )
         drive_ref = mapping.get("driveDataRef")
         drive_file_id = None
         source: AttachmentSource | None = None
@@ -264,7 +347,7 @@ class AttachmentRef:
             drive_file_id=drive_file_id,
             thumbnail_uri=_ref_text(mapping, "thumbnailUri"),
             download_uri=_ref_text(mapping, "downloadUri"),
-            raw=dict(mapping),
+            raw=mapping,
         )
 
     @classmethod

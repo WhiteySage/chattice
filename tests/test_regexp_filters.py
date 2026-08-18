@@ -40,6 +40,11 @@ async def test_regexp_invalid_pattern_fails_at_construction() -> None:
         F.text.regexp("(")
 
 
+async def test_regexp_bytes_pattern_rejected_at_construction() -> None:
+    with pytest.raises(ValueError, match="bytes"):
+        F.text.regexp(re.compile(b"\\d+"))  # type: ignore[arg-type]
+
+
 async def test_regexp_missing_field_never_matches() -> None:
     filt = F.unknown_field.regexp("x")
     assert await filt(_event("x"), {}) is False

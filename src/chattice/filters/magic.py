@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Final, Literal, TypeAlias
+from typing import Any, Final, Literal, TypeAlias, cast
 
 from chattice.events import Event
 
@@ -117,6 +117,13 @@ class MagicField(MagicExpression):
         if isinstance(pattern, re.Pattern):
             if flags:
                 raise ValueError("flags cannot be combined with a compiled re.Pattern")
+            # cast: re.Pattern[bytes] flows in from untyped callers even
+            # though the annotation says str — reject it explicitly.
+            if isinstance(cast(Any, pattern).pattern, bytes):
+                raise ValueError(
+                    "bytes regex patterns cannot match string fields; "
+                    "compile a str pattern instead"
+                )
             compiled: re.Pattern[str] = pattern
         else:
             try:

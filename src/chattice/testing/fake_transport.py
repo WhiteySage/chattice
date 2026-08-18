@@ -12,7 +12,6 @@ from collections.abc import Awaitable, Callable
 from google.apps.chat_v1.services.chat_service import transports
 from google.apps.chat_v1.types.attachment import (
     Attachment,
-    AttachmentDataRef,
     GetAttachmentRequest,
 )
 from google.apps.chat_v1.types.message import (
@@ -184,13 +183,8 @@ class FakeChatTransport(transports.ChatServiceTransport):
     ) -> Attachment:
         self._check_error()
         attachment = self.attachments.get(request.name)
-        if attachment is not None:
-            return attachment
-        return Attachment(
-            name=request.name,
-            content_name="fake.png",
-            content_type="image/png",
-            attachment_data_ref=AttachmentDataRef(
-                resource_name=f"{request.name}/media"
-            ),
-        )
+        if attachment is None:
+            from google.api_core import exceptions
+
+            raise exceptions.NotFound(f"attachment not found: {request.name}")  # type: ignore[no-untyped-call]
+        return attachment

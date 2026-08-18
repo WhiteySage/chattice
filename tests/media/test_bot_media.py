@@ -116,6 +116,43 @@ async def test_upload_attachment_provider_returned_service_account_rejected() ->
         await bot.upload_attachment("S1", InputFile.from_bytes(b"x", filename="x.png"))
 
 
+async def test_upload_attachment_delegated_dwd_credentials_work(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Domain-wide delegation: with_subject keeps .signer but adds _subject,
+    so the delegated service account must classify as USER, not APP."""
+    captured: list[Credentials] = []
+
+    def fake_upload(
+        credentials: Credentials,
+        parent: str,
+        filename: str,
+        content_type: str | None,
+        data: bytes,
+        timeout: float | None,
+    ) -> dict[str, Any]:
+        captured.append(credentials)
+        return {"attachmentDataRef": {"resourceName": "media/dwd"}}
+
+    class DelegatedCreds(_AppCreds):
+        def __init__(self) -> None:
+            super().__init__()
+            self._subject = "chat-bot-user@company.com"
+            self.scopes = ("https://www.googleapis.com/auth/chat.messages",)
+
+    monkeypatch.setattr("chattice.media._rest.upload_media", fake_upload)
+    delegated = DelegatedCreds()
+    bot = Bot(
+        app_credentials_provider=lambda: _AppCreds(),
+        user_credentials_provider=lambda: delegated,
+    )
+    uploaded = await bot.upload_attachment(
+        "S1", InputFile.from_bytes(b"x", filename="x.png")
+    )
+    assert captured[0] is delegated
+    assert uploaded.attachment_data_ref["resourceName"] == "media/dwd"
+
+
 async def test_upload_attachment_user_without_scope_rejected() -> None:
     class NarrowUserCreds(_UserCreds):
         def __init__(self) -> None:
@@ -162,6 +199,39 @@ async def test_download_attachment_destination(
     assert destination.read_bytes() == b"content"
 
 
+async def test_download_falls_back_to_user_identity(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    captured: list[Credentials] = []
+
+    def fake_download(
+        credentials: Credentials, name: str, timeout: float | None
+    ) -> bytes:
+        captured.append(credentials)
+        return b"content"
+
+    class NarrowApp(_AppCreds):
+        def __init__(self) -> None:
+            super().__init__()
+            self.scopes = ("https://www.googleapis.com/auth/other.only",)
+
+    monkeypatch.setattr("chattice.media._rest.download_media", fake_download)
+    user_credentials = _UserCreds()
+    bot = Bot(
+        app_credentials_provider=lambda: NarrowApp(),
+        user_credentials_provider=lambda: user_credentials,
+    )
+    data = await bot.download_attachment("media/r1")
+    assert data == b"content"
+    assert captured[0] is user_credentials
+
+
+async def test_download_without_any_identity_rejected() -> None:
+    bot = Bot(credentials=_AppCreds())  # app creds with chat.bot — fine
+    with pytest.raises(CapabilityNotSupported, match="no user identity"):
+        await bot.upload_attachment("S1", InputFile.from_bytes(b"x", filename="x.png"))
+
+
 async def test_download_drive_backed_rejected() -> None:
     ref = AttachmentRef(source=AttachmentSource.DRIVE_FILE, drive_file_id="d1")
     with pytest.raises(ChatAPIError, match="Drive"):
@@ -175,12 +245,30 @@ async def test_download_without_resource_name_rejected() -> None:
 
 
 async def test_get_attachment_app_auth() -> None:
+    from google.apps.chat_v1.types.attachment import Attachment, AttachmentDataRef
+
+    name = "spaces/S/messages/M/attachments/A"
     transport = FakeChatTransport()
+    transport.attachments[name] = Attachment(
+        name=name,
+        content_name="a.png",
+        content_type="image/png",
+        attachment_data_ref=AttachmentDataRef(resource_name="media/1"),
+    )
     bot = Bot(credentials=_AppCreds(), transport=transport)
-    ref = await bot.get_attachment("spaces/S/messages/M/attachments/A")
-    assert ref.name == "spaces/S/messages/M/attachments/A"
+    ref = await bot.get_attachment(name)
+    assert ref.name == name
     assert ref.is_uploaded
-    assert ref.resource_name == "spaces/S/messages/M/attachments/A/media"
+    assert ref.resource_name == "media/1"
+    assert ref.filename == "a.png"
+
+
+async def test_get_attachment_unknown_name_wraps_not_found() -> None:
+    from chattice.client import ChatNotFoundError
+
+    bot = Bot(credentials=_AppCreds(), transport=FakeChatTransport())
+    with pytest.raises(ChatNotFoundError):
+        await bot.get_attachment("spaces/S/messages/M/attachments/missing")
 
 
 async def test_get_attachment_user_auth_rejected() -> None:
