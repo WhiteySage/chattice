@@ -210,7 +210,7 @@ to PyPI.
 - Verification failures map to HTTP 401 per the official docs; malformed
   payloads to 400; handler failures to 500.
 
-## [0.14.0b5] — 2026-08-18 — media attachments, regex filters, dual-identity auth
+## [0.14.0b5] — media attachments, regex filters, dual-identity auth
 
 - Added `chattice.media`: `InputFile` (from_path/from_bytes, lazy reads,
   local preflight), `UploadedAttachment` (space-scoped), typed

@@ -1,6 +1,6 @@
 # Public beta stability
 
-Current package: Chattice 0.14.0, the public-beta release candidate.
+Current package: Chattice 0.14.0b5, public beta.
 
 ## Stable beta surface
 

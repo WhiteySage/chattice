@@ -1,6 +1,6 @@
 # Public API Reference
 
-Audit snapshot for the 0.14.0 beta candidate (2026-08-16).
+Audit snapshot for the 0.14.0b5 public beta (2026-08-18).
 
 ## Convention
 
