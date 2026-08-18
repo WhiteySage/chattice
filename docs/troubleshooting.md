@@ -102,10 +102,33 @@ Format: Symptom → Cause → Verify → Fix.
 
 ## Attachment upload failure
 
-- **Cause:** media upload is USER-auth only; app auth cannot upload.
-- **Verify:** the wrapped API error type.
-- **Fix:** use user credentials for upload flows; defer full attachment
-  support to the planned API (raw SDK meanwhile).
+- **Cause:** `media.upload` is USER-auth only; app/service-account auth
+  cannot upload. The Bot fails locally with `CapabilityNotSupported`
+  naming the missing user identity.
+- **Verify:** the exception type — a local `CapabilityNotSupported`
+  (no network) vs `ChatPermissionDeniedError` (Google denied it).
+- **Fix:** configure a dual-identity Bot:
+  `Bot(app_credentials_provider=..., user_credentials_provider=...)`.
+  Inside Google Workspace, `DelegatedUserCredentialsProvider` reuses the
+  same service-account JSON with a `subject=` (Domain-Wide Delegation);
+  with end-user OAuth use `UserCredentialsProvider`. A user-authenticated
+  call acts on behalf of that user. See
+  [Files, Images & Media](guides/files-media.md).
+
+## Media extra missing
+
+- **Cause:** media operations require the optional REST client (the
+  GAPIC SDK cannot carry a binary media body).
+- **Verify:** the error carries an install command.
+- **Fix:** `pip install "chattice[media]"`.
+
+## Drive-backed attachment download
+
+- **Cause:** `media.download` serves Chat-uploaded content only; a
+  `DRIVE_FILE` reference needs the Drive API.
+- **Verify:** `attachment_refs` reports `is_drive` and a `drive_file_id`.
+- **Fix:** call the Google Drive API with that id; Chattice rejects the
+  Chat media path locally with an actionable message.
 
 ## Space identifier error
 

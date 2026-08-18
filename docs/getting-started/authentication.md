@@ -50,6 +50,46 @@ bot = Bot(credentials_provider=provider, auth_mode=AuthMode.USER)
 Choose the narrowest scopes required by the methods you call. See Google's
 [authentication and authorization matrix](https://developers.google.com/workspace/chat/authenticate-authorize).
 
+### One Bot, both identities
+
+Some Google operations are user-only (`media.upload`), some app-only
+(`spaces.messages.attachments.get`), some accept both. Instead of
+maintaining two Bots, configure ONE Bot with both identity sources — it
+selects the identity per operation based on the capability:
+
+```python
+from chattice.auth import (
+    DelegatedUserCredentialsProvider,
+    ServiceAccountCredentialsProvider,
+)
+from chattice.client import Bot
+
+bot = Bot(
+    app_credentials_provider=ServiceAccountCredentialsProvider.from_service_account_file(
+        "/run/secrets/chat-service-account.json"
+    ),
+    user_credentials_provider=DelegatedUserCredentialsProvider.from_service_account_file(
+        "/run/secrets/chat-service-account.json",
+        subject="chat-bot-user@company.com",
+    ),
+)
+```
+
+Ordinary sends and cards use the app identity; `attachments=[...]`
+uploads use the user identity — handler code does not change. See
+[Files, Images & Media](../guides/files-media.md).
+
+`DelegatedUserCredentialsProvider` uses Domain-Wide Delegation: the
+service account impersonates a configured Workspace user via
+`with_subject`, and Google treats those calls as user authentication —
+one service-account JSON serves both identities. This requires the
+Workspace administrator to configure the delegation and scopes. With
+real end-user OAuth tokens, pass a `UserCredentialsProvider` instead.
+
+A user-authenticated call acts on behalf of that user; the framework
+automates the credential switch but never hides this attribution
+semantic.
+
 ## Bind a Bot once
 
 ```python

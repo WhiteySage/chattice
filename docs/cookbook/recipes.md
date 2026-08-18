@@ -2,6 +2,54 @@
 
 Recipes demonstrate composition. They do not add business objects to core.
 
+## Local chart as a Chat attachment
+
+Render a PNG with imgkit and attach it to a reply — no public URL, no
+storage, no upload boilerplate (requires USER auth; see
+[Files, Images & Media](../guides/files-media.md)):
+
+```python
+import os
+
+import imgkit
+from chattice.media import InputFile
+
+
+@router.message(F.text == "/report")
+async def report(message: MessageEvent) -> Message:
+    path = f"{os.path.abspath(os.getcwd())}/static/out3.png"
+    imgkit.from_string(
+        "<h1>Revenue</h1><p>Up 12%</p>",
+        path,
+        options={"xvfb": ""},
+    )
+    return await message.reply(attachments=[InputFile.from_path(path)])
+```
+
+PDF and arbitrary bytes work identically:
+
+```python
+await bot.send_message(
+    "spaces/AAA",
+    text="Report",
+    attachments=[InputFile.from_path("report.pdf")],
+)
+
+await bot.send_message(
+    "spaces/AAA",
+    attachments=[
+        InputFile.from_bytes(
+            png_bytes,
+            filename="result.png",
+            content_type="image/png",
+        )
+    ],
+)
+```
+
+For a picture rendered INSIDE a card, use the hosted-URL `Image` widget
+instead — Card Images are HTTPS URLs, not local files.
+
 ## Poll
 
 Build a poll from a `Card`, `SelectionInput` or Buttons, a named

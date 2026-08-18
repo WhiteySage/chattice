@@ -37,6 +37,12 @@ being dropped. The raw `.proto` object remains the escape hatch for future
 Google SDK fields; schema-unknown JSON cannot be retained by protobuf itself,
 so use the JSON path when exact unknown-field round-trip matters.
 
+`Image(image_url=..., alt_text=..., on_click=...)` is the typed
+URL-based picture widget: HTTPS-only (validated at construction),
+`on_click` reuses `Action`/`OpenLink`. It is deliberately separate from
+message attachments — a local file is never a Card Image (see
+[files-media](../guides/files-media.md)).
+
 ## Buttons and actions
 
 `Button(action=..., parameters=...)` produces `onClick.action` with string

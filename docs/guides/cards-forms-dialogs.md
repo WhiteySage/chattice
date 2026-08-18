@@ -39,6 +39,33 @@ become a normalized `ActionEvent`. For structured parameters, subclass
 `ActionData` and register `YourData.filter()` instead of decoding dictionaries
 throughout the application.
 
+## Hosted images
+
+`Image` renders an HTTPS-hosted picture inside a card:
+
+```python
+from chattice.cards import Card, Image, Section
+
+card = Card(
+    sections=[
+        Section(
+            widgets=[
+                Image(
+                    image_url="https://example.com/result.png",
+                    alt_text="Result",
+                )
+            ]
+        )
+    ]
+)
+```
+
+Card Images are URL-only: `image_url` must be an absolute HTTPS URL —
+local paths, bytes and `data:` URLs are rejected at construction.
+`on_click` reuses the existing `Action` / `OpenLink` facades. A **local**
+file is not a Card Image — it is an attachment, see
+[Files, Images & Media](files-media.md).
+
 ## Forms and typed models
 
 Form widgets include `TextInput`, `SelectionInput`, and `DateTimePicker`.

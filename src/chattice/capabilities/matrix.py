@@ -174,6 +174,9 @@ class OutboundCapability(Enum):
     MESSAGE_CREATE = auto()
     MESSAGE_UPDATE = auto()
     USER_IMPERSONATION = auto()
+    ATTACHMENT_UPLOAD = auto()
+    MEDIA_DOWNLOAD = auto()
+    ATTACHMENT_METADATA_GET = auto()
 
 
 _OUTBOUND_DESCRIPTIONS: dict[OutboundCapability, str] = {
@@ -189,14 +192,41 @@ _OUTBOUND_DESCRIPTIONS: dict[OutboundCapability, str] = {
         "Impersonating users requires user authentication (OAuth or "
         "domain-wide delegation)."
     ),
+    OutboundCapability.ATTACHMENT_UPLOAD: (
+        "media.upload requires user authentication — a service-account/"
+        "app-auth Bot cannot upload local files."
+    ),
+    OutboundCapability.MEDIA_DOWNLOAD: (
+        "media.download allows user scopes (chat.messages.readonly/"
+        "chat.messages) or app auth (chat.bot)."
+    ),
+    OutboundCapability.ATTACHMENT_METADATA_GET: (
+        "spaces.messages.attachments.get requires app authentication "
+        "(chat.bot) and serves metadata only."
+    ),
 }
 
-# Verified Google facts (release notes): app auth can create/update only
-# the app's OWN messages; user auth can create/update user messages.
+# Verified Google facts (release notes + media/attachments references):
+# app auth can create/update only the app's OWN messages; user auth can
+# create/update user messages. media.upload is USER-only; media.download
+# allows USER or APP; attachment metadata get is APP-only.
 _APP_OUTBOUND = frozenset(
-    {OutboundCapability.MESSAGE_CREATE, OutboundCapability.MESSAGE_UPDATE}
+    {
+        OutboundCapability.MESSAGE_CREATE,
+        OutboundCapability.MESSAGE_UPDATE,
+        OutboundCapability.MEDIA_DOWNLOAD,
+        OutboundCapability.ATTACHMENT_METADATA_GET,
+    }
 )
-_USER_OUTBOUND = _APP_OUTBOUND | {OutboundCapability.USER_IMPERSONATION}
+_USER_OUTBOUND = frozenset(
+    {
+        OutboundCapability.MESSAGE_CREATE,
+        OutboundCapability.MESSAGE_UPDATE,
+        OutboundCapability.USER_IMPERSONATION,
+        OutboundCapability.ATTACHMENT_UPLOAD,
+        OutboundCapability.MEDIA_DOWNLOAD,
+    }
+)
 
 _GOOGLE_AUTH_SCOPE_PREFIX = "https://www.googleapis.com/auth/"
 
@@ -214,9 +244,12 @@ def _scopes(*names: str) -> frozenset[str]:
     return frozenset(f"{_GOOGLE_AUTH_SCOPE_PREFIX}{name}" for name in names)
 
 
-# Official method references (verified 2026-08-16):
+# Official method references (verified 2026-08-16/18):
 # https://developers.google.com/workspace/chat/api/reference/rest/v1/spaces.messages/create
 # https://developers.google.com/workspace/chat/api/reference/rest/v1/spaces.messages/update
+# https://developers.google.com/workspace/chat/api/reference/rest/v1/media/upload
+# https://developers.google.com/workspace/chat/api/reference/rest/v1/media/download
+# https://developers.google.com/workspace/chat/api/reference/rest/v1/spaces.messages.attachments/get
 _OUTBOUND_SCOPE_RULES = (
     _CapabilityRule(
         AuthMode.APP,
@@ -237,6 +270,26 @@ _OUTBOUND_SCOPE_RULES = (
         AuthMode.USER,
         OutboundCapability.MESSAGE_UPDATE,
         _scopes("chat.messages", "chat.import"),
+    ),
+    _CapabilityRule(
+        AuthMode.USER,
+        OutboundCapability.ATTACHMENT_UPLOAD,
+        _scopes("chat.messages.create", "chat.messages", "chat.import"),
+    ),
+    _CapabilityRule(
+        AuthMode.USER,
+        OutboundCapability.MEDIA_DOWNLOAD,
+        _scopes("chat.messages.readonly", "chat.messages"),
+    ),
+    _CapabilityRule(
+        AuthMode.APP,
+        OutboundCapability.MEDIA_DOWNLOAD,
+        _scopes("chat.bot"),
+    ),
+    _CapabilityRule(
+        AuthMode.APP,
+        OutboundCapability.ATTACHMENT_METADATA_GET,
+        _scopes("chat.bot"),
     ),
 )
 

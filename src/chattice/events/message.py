@@ -14,6 +14,9 @@ if TYPE_CHECKING:
 
     from chattice.cards import AccessoryWidget, Card
     from chattice.client import MessageReplyOption
+    from chattice.media import InputFile, UploadedAttachment
+
+from chattice.media import AttachmentRef
 
 from .base import Event
 from .references import MessageRef, UserRef, _send_message
@@ -81,6 +84,16 @@ class MessageEvent(Event):
         return _mapping_sequence(_raw_message(self.raw).get("attachment"))
 
     @property
+    def attachment_refs(self) -> tuple[AttachmentRef, ...]:
+        """Typed inbound attachment metadata (additive over ``attachments``).
+
+        Distinguishes UPLOADED_CONTENT from DRIVE_FILE and exposes the
+        human-facing thumbnail/download links next to the programmatic
+        ``attachmentDataRef.resourceName`` download handle.
+        """
+        return tuple(AttachmentRef.from_mapping(m) for m in self.attachments)
+
+    @property
     def annotations(self) -> tuple[Mapping[str, object], ...]:
         """Lossless snapshots of Google's output-only annotations."""
         return _mapping_sequence(_raw_message(self.raw).get("annotations"))
@@ -126,6 +139,7 @@ class MessageEvent(Event):
         card: Card | None = None,
         notify: str | None = None,
         private_to: UserRef | str | None = None,
+        attachments: Sequence[InputFile | UploadedAttachment] | None = None,
         bot: object | None = None,
     ) -> Message:
         """Reply in this message's known thread through the bound Bot."""
@@ -152,4 +166,5 @@ class MessageEvent(Event):
             card=card,
             notify=notify,
             private_to=private_to,
+            attachments=attachments,
         )

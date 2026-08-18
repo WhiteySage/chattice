@@ -52,6 +52,38 @@ chattice does not pretend they exist:
 Where a Telegram feature has no Google Chat counterpart, the honest answer is
 "not available", not a reimplementation with a different name.
 
+## Local files: FSInputFile vs InputFile
+
+AIOGRAM:
+
+```python
+from aiogram.types import FSInputFile
+
+await message.reply_document(FSInputFile(path="report.pdf"))
+```
+
+CHATTICE:
+
+```python
+from chattice.media import InputFile
+
+await message.reply(attachments=[InputFile.from_path("report.pdf")])
+```
+
+One canonical `InputFile` covers every local artifact — there are no
+Photo/Document/Video entities. `InputFile.from_bytes(data, filename=...)`
+wraps in-memory content; `from_path` reads lazily, only on the upload
+path.
+
+!!! warning "Google Chat media upload requires USER auth"
+    A service-account Chat app **cannot upload a local file** — Google
+    restricts `media.upload` to user authentication. Configure one Bot
+    with both identities
+    (`Bot(app_credentials_provider=..., user_credentials_provider=...)`)
+    and the upload switches identities internally. A hosted HTTPS image
+    in a Card (`chattice.cards.Image`) is the app-auth alternative. See
+    [Files, Images & Media](guides/files-media.md).
+
 ## Proactive sends: chat_id vs Space
 
 AIOGRAM:

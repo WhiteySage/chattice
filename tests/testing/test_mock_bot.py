@@ -21,6 +21,7 @@ async def test_send_recorded_with_arguments() -> None:
                 "card": None,
                 "notify": None,
                 "private_to": None,
+                "attachments": None,
             },
         )
     ]

@@ -81,6 +81,23 @@ Domain-wide delegation (a service account with an impersonated `subject=`)
 acts as a user and is therefore `AuthMode.USER`, not a fourth mode. The
 `USER_IMPERSONATION` capability covers both OAuth-user identity and DWD.
 
+`DelegatedUserCredentialsProvider` packages this: it wraps any
+`CredentialsProvider` and returns `credentials.with_subject(subject)`:
+
+```python
+from chattice.auth import DelegatedUserCredentialsProvider
+
+user_provider = DelegatedUserCredentialsProvider.from_service_account_file(
+    "/run/secrets/chat-service-account.json",
+    subject="chat-bot-user@company.com",
+)
+```
+
+One service-account JSON therefore serves both identities of a
+dual-identity Bot (see [bot-api-client](bot-api-client.md)): the plain
+provider for APP auth, the delegated provider for USER auth. Requires
+Workspace admin configuration of the delegation and scopes.
+
 ### useAdminAccess
 
 `useAdminAccess` is Google's separate administrator mode with its own

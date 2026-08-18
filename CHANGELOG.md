@@ -27,7 +27,7 @@ Versioning after the first public release; pre-1.0 APIs may change.
 (0.14.0 was the pre-release candidate; the public beta ships as
 0.14.0b1 per ADR-011.)
 
-## [0.14.0] — 2026-08-15 — public beta release
+## [0.14.0] — public beta release
 
 ### Added
 
@@ -66,7 +66,7 @@ frozen against incompatible change; additions remain possible. Experimental
 and raw/advanced surfaces carry their separate contracts. Not published to
 PyPI.
 
-## [0.13.0] — 2026-08-15 — development release
+## [0.13.0] — development release
 
 ### Added
 
@@ -80,7 +80,7 @@ PyPI.
   reconciliation (8 blockers); selective gap audit (argument_text,
   notification options, private viewer, card updates, poll recipe).
 
-## [0.12.0] — 2026-08-15
+## [0.12.0]
 
 ### Added
 
@@ -96,7 +96,7 @@ PyPI.
 before 1.0.0 (semver applies to post-1.0 releases only). Not published
 to PyPI.
 
-## [0.11.0] — 2026-08-15
+## [0.11.0]
 
 ### Added
 
@@ -107,7 +107,7 @@ to PyPI.
 - Live integration suite skeleton (`tests/integration/live`) with an
   honest skip and full setup instructions.
 
-## [0.10.0] — 2026-08-15
+## [0.10.0]
 
 ### Added
 
@@ -121,7 +121,7 @@ to PyPI.
   backoff guidance), observability (OTel bridge example), security audit
   with a source-scan redaction test.
 
-## [0.9.0] — 2026-08-15
+## [0.9.0]
 
 ### Added
 
@@ -132,7 +132,7 @@ to PyPI.
   parser, workspace_event observer, create_workspace_events_router.
 - SubscriptionManager protocol skeleton (implementation deferred).
 
-## [0.8.0] — 2026-08-15
+## [0.8.0]
 
 ### Added
 
@@ -145,7 +145,7 @@ to PyPI.
   network calls; capabilities injected into handler context.
 - `chattice.experimental`: preview-feature namespace marker.
 
-## [0.7.0] — 2026-08-14
+## [0.7.0]
 
 ### Added
 
@@ -158,7 +158,7 @@ to PyPI.
 - `chattice[redis]` extra: RedisStorage (per-command atomicity only —
   update_data is not cross-process, documented honestly).
 
-## [0.6.0] — 2026-08-14
+## [0.6.0]
 
 ### Added
 
@@ -171,7 +171,7 @@ to PyPI.
 - App Home: RenderActions pushCard (APP_HOME) and updateCard (SUBMIT_FORM)
   sync responses.
 
-## [0.5.0] — 2026-08-14
+## [0.5.0]
 
 ### Added
 
@@ -184,7 +184,7 @@ to PyPI.
   `cardsV2`; CARD_CLICKED replies with `actionResponse UPDATE_MESSAGE`
   (documented bot-message card replacement).
 
-## [0.4.0] — 2026-08-14
+## [0.4.0]
 
 ### Added
 
@@ -196,7 +196,7 @@ to PyPI.
 - `ChatAPIError` hierarchy wrapping SDK errors with preserved code/details
   and chaining; `CredentialsProvider` protocol.
 
-## [0.3.0] — 2026-08-14
+## [0.3.0]
 
 ### Added
 
@@ -212,6 +212,28 @@ to PyPI.
 
 ## Unreleased
 
+- Added `chattice.media`: `InputFile` (from_path/from_bytes, lazy reads,
+  local preflight), `UploadedAttachment` (space-scoped), typed
+  `AttachmentRef`/`AttachmentSource` and the additive
+  `MessageEvent.attachment_refs` accessor.
+- Added the Bot media flow: `upload_attachment` (USER auth),
+  `download_attachment` (USER or APP), `get_attachment` (APP + chat.bot),
+  `send_message(attachments=...)` and `attachments=` on contextual sends —
+  the whole set is preflighted locally, then uploaded sequentially.
+- Added dual-identity Bots: `app_credentials_provider` /
+  `user_credentials_provider` with capability-based identity selection and
+  `DelegatedUserCredentialsProvider` (Domain-Wide Delegation via
+  `with_subject` — one service-account JSON for both identities).
+- Added outbound capabilities `ATTACHMENT_UPLOAD`, `MEDIA_DOWNLOAD`,
+  `ATTACHMENT_METADATA_GET` with the documented scope matrix.
+- Added the typed Cards v2 `Image` widget (HTTPS-only, `on_click` via the
+  existing Action/OpenLink facades).
+- Added `F.text.regexp(pattern, flags=)` — Python-regex routing with
+  `re.match` semantics, compiled once at filter construction.
+- Added the optional `chattice[media]` extra (official REST media
+  endpoints; the GAPIC client cannot carry a binary media body).
+- Added the `Files, Images & Media` guide.
+
 - Added the pure Google Chat interaction adapter for all eight stable event
   types, direct/App Home envelopes, typed common/form data, and explicit parser
   exceptions.
@@ -224,6 +246,6 @@ to PyPI.
 - Added comprehensive core-engine tests, executable examples, and architecture
   documentation.
 
-## 0.0.0 - 2026-08-13
+## 0.0.0
 
 - Added Phase 0 research, architecture, ADRs, and repository scaffold.
