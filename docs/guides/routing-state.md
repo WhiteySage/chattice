@@ -25,6 +25,37 @@ ordered and can inject mappings into handler dependency context. Middleware
 runs outer-to-inner through the router tree. Error observers receive an
 `ErrorEvent` and can translate application failures.
 
+### Native regex routing
+
+`F.text.regexp(...)` matches a string field with a Python regular
+expression, `re.match` semantics (the pattern must match from the START
+of the value). This is Python regex syntax — do not wrap patterns in
+`/.../`.
+
+```python
+import re
+
+
+@support.message(F.text.regexp(r"^[Тт]ест$"))
+async def test_command(message: MessageEvent) -> str:
+    return "ok"
+
+
+@support.message(F.text.regexp(r"^тест$", flags=re.IGNORECASE))
+async def test_command_ci(message: MessageEvent) -> str:
+    return "ok"
+```
+
+A pattern string is compiled once at filter construction; invalid
+patterns raise `ValueError` immediately, never at evaluation time.
+Pre-compiled `re.Pattern` values are accepted as-is (and cannot be
+combined with `flags`). Missing fields and non-string values never
+match. String equality stays literal: `F.text == "^тест$"` compares the
+exact characters, regex semantics never leak into `==`.
+
+`F.text.regexp(...)` composes with `&`, `|`, `~` like any other Magic
+Filter, e.g. `F.text.regexp(r"^ping") & ~F.text.regexp(r"pong$")`.
+
 ## Dependency injection
 
 Handlers declare only the values they need. Event parameters are resolved by

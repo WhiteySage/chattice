@@ -13,6 +13,7 @@ if TYPE_CHECKING:
 
     from chattice.cards import AccessoryWidget, Card
     from chattice.client import MessageReplyOption
+    from chattice.media import InputFile, UploadedAttachment
 
 
 _current_bot: ContextVar[object | None] = ContextVar(
@@ -53,6 +54,7 @@ async def _send_message(
     card: Card | None,
     notify: str | None,
     private_to: UserRef | str | None,
+    attachments: Sequence[InputFile | UploadedAttachment] | None,
 ) -> Message:
     # Local import avoids the client -> event-reference import cycle.
     from chattice.client import MessageReplyOption
@@ -71,6 +73,7 @@ async def _send_message(
         card=card,
         notify=notify,
         private_to=private_to,
+        attachments=attachments,
     )
     return cast("Message", result)
 
@@ -113,6 +116,7 @@ class SpaceRef:
         card: Card | None = None,
         notify: str | None = None,
         private_to: UserRef | str | None = None,
+        attachments: Sequence[InputFile | UploadedAttachment] | None = None,
         bot: object | None = None,
     ) -> Message:
         """Send through the bound Bot without fetching this space."""
@@ -129,6 +133,7 @@ class SpaceRef:
             card=card,
             notify=notify,
             private_to=private_to,
+            attachments=attachments,
         )
 
 
@@ -168,6 +173,7 @@ class ThreadRef:
         card: Card | None = None,
         notify: str | None = None,
         private_to: UserRef | str | None = None,
+        attachments: Sequence[InputFile | UploadedAttachment] | None = None,
         bot: object | None = None,
     ) -> Message:
         """Send in this thread through the bound Bot with zero fetches."""
@@ -184,6 +190,7 @@ class ThreadRef:
             card=card,
             notify=notify,
             private_to=private_to,
+            attachments=attachments,
         )
 
 

@@ -6,7 +6,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Any, Protocol
+from typing import Any, Protocol, cast
 
 from google.auth.credentials import Credentials
 from google.auth.transport.requests import Request
@@ -124,10 +124,66 @@ class UserCredentialsProvider:
         return self.credentials
 
 
+_USER_SCOPE = "https://www.googleapis.com/auth/chat.messages"
+
+
+@dataclass(frozen=True, slots=True)
+class DelegatedUserCredentialsProvider:
+    """User-auth provider via Google Workspace Domain-Wide Delegation.
+
+    A service account granted domain-wide delegation impersonates a
+    Workspace user through ``with_subject``; Google treats the resulting
+    credentials as USER authentication (media.upload, user-scoped
+    operations) without per-user consent flows. ONE service-account JSON
+    therefore serves both identities of a dual-identity Bot: the same
+    file supplies the app provider directly and this provider with a
+    ``subject``. Requires the Workspace administrator to configure the
+    delegation and OAuth scopes.
+    """
+
+    provider: CredentialsProvider
+    subject: str
+
+    @classmethod
+    def from_service_account_file(
+        cls,
+        path: str | Path,
+        subject: str,
+        *,
+        scopes: list[str] | None = None,
+    ) -> DelegatedUserCredentialsProvider:
+        """Build from a service-account JSON file and a delegated subject."""
+        return cls(
+            provider=ServiceAccountCredentialsProvider.from_service_account_file(
+                path, scopes=scopes if scopes is not None else [_USER_SCOPE]
+            ),
+            subject=subject,
+        )
+
+    def __call__(self) -> Credentials:
+        credentials = self.provider()
+        with_subject = getattr(credentials, "with_subject", None)
+        if not callable(with_subject):
+            raise ValueError(
+                "these credentials do not support with_subject delegation; "
+                "use service-account credentials with Domain-Wide Delegation "
+                "configured in the Workspace admin console"
+            )
+        delegated = cast(Credentials, with_subject(self.subject))
+        if delegated is None:
+            raise ValueError(
+                "these credentials do not support with_subject delegation; "
+                "use service-account credentials with Domain-Wide Delegation "
+                "configured in the Workspace admin console"
+            )
+        return delegated
+
+
 __all__ = [
     "CHAT_BOT_SCOPE",
     "AuthMode",
     "CredentialsProvider",
+    "DelegatedUserCredentialsProvider",
     "ServiceAccountCredentialsProvider",
     "UserCredentialsProvider",
 ]

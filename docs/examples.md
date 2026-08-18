@@ -20,6 +20,12 @@ pytest. Live integration tests are separate and opt-in.
 | Link preview | `examples/scenarios/link_preview.py` |
 | Private dialog to public card | `examples/scenarios/private_dialog_to_public_card.py` |
 | Multi-Space proactive send | `examples/production/multi_space_notification.py` |
+| Local files & media (copy-paste recipes) | [`docs/guides/files-media.md`](guides/files-media.md), [Cookbook](cookbook/recipes.md) |
+| Regex routing (copy-paste recipes) | [`docs/guides/routing-state.md`](guides/routing-state.md) |
+
+Media upload needs USER authentication (no-credential execution is not
+meaningful), so media flows ship as copy-paste recipes with MockBot
+exercisable in unit tests instead of a credential-free executable.
 
 Run one from a checkout:
 

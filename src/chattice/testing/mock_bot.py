@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any
 
 from google.apps.chat_v1.types.message import Message
@@ -10,6 +11,7 @@ from google.apps.chat_v1.types.space import Space
 
 from chattice.auth import AuthMode
 from chattice.capabilities import OutboundCapabilities
+from chattice.media import AttachmentRef, AttachmentSource, UploadedAttachment
 
 __all__ = ["MockBot"]
 
@@ -43,6 +45,7 @@ class MockBot:
         card: Any = None,
         notify: Any = None,
         private_to: Any = None,
+        attachments: Any = None,
     ) -> Message:
         parent = space if isinstance(space, str) else space.name
         self.calls.append(
@@ -56,11 +59,61 @@ class MockBot:
                     "private_to": (
                         private_to.name if hasattr(private_to, "name") else private_to
                     ),
+                    "attachments": (
+                        [a.filename for a in attachments] if attachments else None
+                    ),
                 },
             )
         )
         name = f"{parent}/messages/{len(self.calls)}"
         return Message(name=name, text=text or "")
+
+    async def upload_attachment(
+        self, space: Any, file: Any, *, timeout: float | None = None
+    ) -> UploadedAttachment:
+        parent = space if isinstance(space, str) else space.name
+        self.calls.append(
+            (
+                "upload_attachment",
+                {"space": parent, "filename": file.filename},
+            )
+        )
+        return UploadedAttachment(
+            space=parent,
+            filename=file.filename,
+            attachment_data_ref={
+                "resourceName": (f"{parent}/attachments/upload/{len(self.calls)}")
+            },
+        )
+
+    async def download_attachment(
+        self,
+        attachment: Any,
+        *,
+        destination: str | Path | None = None,
+        timeout: float | None = None,
+    ) -> bytes | Path:
+        name = (
+            attachment.resource_name
+            if hasattr(attachment, "resource_name")
+            else str(attachment)
+        )
+        self.calls.append(("download_attachment", {"resource_name": name}))
+        if destination is None:
+            return b""
+        path = Path(destination)
+        path.write_bytes(b"")  # noqa: ASYNC240 — test stub, no real I/O guard
+        return path
+
+    async def get_attachment(
+        self, name: str, *, timeout: float | None = None
+    ) -> AttachmentRef:
+        self.calls.append(("get_attachment", {"name": name}))
+        return AttachmentRef(
+            name=name,
+            source=AttachmentSource.UPLOADED_CONTENT,
+            attachment_data_ref={"resourceName": name},
+        )
 
     async def get_message(self, name: str, *, timeout: float | None = None) -> Message:
         self.calls.append(("get_message", {"name": name}))

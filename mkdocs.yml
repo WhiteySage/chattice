@@ -31,6 +31,7 @@ nav:
       - Messages & Threads: guides/messages.md
       - Native commands: guides/commands.md
       - Cards, Forms & Dialogs: guides/cards-forms-dialogs.md
+      - Files, Images & Media: guides/files-media.md
       - Routing & State: guides/routing-state.md
       - Workspace Events: guides/workspace-events.md
       - HTTP vs Pub/Sub: guides/transports.md

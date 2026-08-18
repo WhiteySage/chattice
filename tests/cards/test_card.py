@@ -97,16 +97,16 @@ def test_bare_button_widget_is_rejected() -> None:
 
 
 def test_unmodelled_proto_widget_becomes_raw_widget() -> None:
-    from google.apps.card_v1.types.card import Image
+    from google.apps.card_v1.types.card import Grid
 
     card = Card(sections=[Section(widgets=[TextInput(name="env", label="E")])])
     proto = card.to_proto()
-    # The facade models six of the SDK's widget kinds; an unmodelled kind
-    # is retained through the raw fallback.
-    proto.sections[0].widgets[0].image = Image()
+    # The facade models a fixed set of the SDK's widget kinds; an
+    # unmodelled kind is retained through the raw fallback.
+    proto.sections[0].widgets[0].grid = Grid()
     rebuilt = Card.from_proto(proto)
     assert isinstance(rebuilt.sections[0].widgets[0], RawWidget)
-    assert rebuilt.sections[0].widgets[0].to_dict() == {"image": {}}
+    assert rebuilt.sections[0].widgets[0].to_dict() == {"grid": {}}
 
 
 def test_button_options_round_trip() -> None:

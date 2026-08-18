@@ -153,6 +153,7 @@ async def test_ping_answer_sent_via_bot_and_acked() -> None:
             "card": None,
             "notify": None,
             "private_to": None,
+            "attachments": None,
         }
     ]
 

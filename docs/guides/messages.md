@@ -118,3 +118,7 @@ HTTP-only. App Home is the persistent personal surface (HTTP-only).
 Nothing is implicitly private and nothing implicitly becomes a Thread —
 the application chooses the surface per runtime capabilities.
 
+Local files attach to messages via `attachments=[InputFile(...)]` —
+upload requires USER authentication and private messages cannot carry
+attachments. See [Files, Images & Media](files-media.md).
+
