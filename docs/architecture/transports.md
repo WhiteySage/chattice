@@ -1,7 +1,7 @@
 # Transports
 
 Chattice separates interaction parsing, dispatch, and delivery. The concrete
-entry points below are available in 0.3.3.4.
+entry points below are available in 0.3.4.
 
 ## HTTP interactions
 

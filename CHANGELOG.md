@@ -4,7 +4,7 @@ All notable changes are documented here. Versions follow Python packaging
 conventions. Before 1.0, incompatible changes may be released in a minor
 version and will include upgrade notes.
 
-## [0.3.3.4] — Examples and documentation corrections
+## [0.3.4] — Examples and documentation corrections
 
 ### Fixed
 

@@ -2,8 +2,8 @@
   "spdxVersion": "SPDX-2.3",
   "dataLicense": "CC0-1.0",
   "SPDXID": "SPDXRef-DOCUMENT",
-  "name": "chattice-0.3.3.4-sbom",
-  "documentNamespace": "https://spdx.org/spdxdocs/chattice-0.3.3.4-a220f9e8-3c8c-52d1-996b-f127aff339f0",
+  "name": "chattice-0.3.4-sbom",
+  "documentNamespace": "https://spdx.org/spdxdocs/chattice-0.3.4-d053714c-c218-51d8-a30a-baa074dd8e4f",
   "creationInfo": {
     "created": "1970-01-01T00:00:00Z",
     "creators": [
@@ -124,7 +124,7 @@
     {
       "SPDXID": "SPDXRef-Package-chattice",
       "name": "chattice",
-      "versionInfo": "0.3.3.4",
+      "versionInfo": "0.3.4",
       "downloadLocation": "NOASSERTION",
       "filesAnalyzed": false,
       "licenseConcluded": "NOASSERTION",
