@@ -163,7 +163,7 @@ class PreviewFeature(Enum):
     so documentation and code reference ONE list of preview surfaces.
     """
 
-    MESSAGE_ACTION = auto()  # APP_COMMAND message actions (Developer Preview)
+    MESSAGE_ACTION = auto()  # Legacy opt-in retained for compatibility; now GA
     REPLACE_CARDS = auto()  # messages.replaceCards
     USER_AUTH_CARDS = auto()  # card creation with user auth
     CUSTOMER_LEVEL_SUBSCRIPTIONS = auto()  # Workspace Events customer-level
@@ -199,4 +199,4 @@ class PreviewCapabilities:
 # APP_COMMAND types that are Developer Preview: the adapter accepts them
 # forward-compatibly (CommandEvent.source_kind carries the wire string) but
 # they are not advertised as stable.
-PREVIEW_APP_COMMAND_TYPES: frozenset[str] = frozenset({"MESSAGE_ACTION"})
+PREVIEW_APP_COMMAND_TYPES: frozenset[str] = frozenset()

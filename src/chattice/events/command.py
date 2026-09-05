@@ -27,8 +27,7 @@ class CommandEvent(Event):
       ``SLASH_COMMAND``);
     - quick commands / message actions arrive as ``APP_COMMAND`` events
       with ``appCommandMetadata`` (source kind ``QUICK_COMMAND``;
-      ``MESSAGE_ACTION`` is a Developer Preview type, accepted
-      forward-compatibly).
+      ``MESSAGE_ACTION`` for message actions).
     """
 
     event_type: str = field(default="command", init=False)

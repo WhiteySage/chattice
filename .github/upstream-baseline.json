@@ -3,5 +3,6 @@
   "chat_release_feed_sha256": "97ffdeb5908afe04719f9c7c8ddfb920f73aabd7835c7ffc7316b63a794ce7da",
   "google_apps_card": "0.7.0",
   "google_apps_chat": "0.10.5",
-  "google_auth": "2.57.0"
+  "google_auth": "2.57.1",
+  "google_cloud_pubsub": "2.40.0"
 }

@@ -90,7 +90,7 @@ def test_response_require_raises_with_actionable_message() -> None:
 
 
 def test_preview_app_command_types_are_documented() -> None:
-    assert "MESSAGE_ACTION" in PREVIEW_APP_COMMAND_TYPES
+    assert "MESSAGE_ACTION" not in PREVIEW_APP_COMMAND_TYPES
     assert PreviewFeature.MESSAGE_ACTION.name == "MESSAGE_ACTION"
 
 

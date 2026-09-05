@@ -4,9 +4,9 @@ Verified at release time.
 
 | Input | Compatible snapshot |
 | --- | --- |
-| Chattice | 0.3.4 |
+| Chattice | 0.3.5 |
 | Python | 3.11, 3.12, 3.13 |
-| `google-apps-chat` | `>=0.10.4,<1.0.0` (latest checked: 0.10.5) |
+| `google-apps-chat` | `>=0.10.5,<1.0.0` (latest checked: 0.10.5) |
 | Google Chat REST API | v1 |
 | Google Chat Discovery revision | v1, pinned at release |
 | Google Workspace Events envelopes | CloudEvents 1.0 |

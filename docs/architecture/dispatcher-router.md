@@ -24,9 +24,7 @@ router.message.register(other_handler, custom_filter)
 not imply any Google Cards parsing.
 
 `slash_command` and `quick_command` route stable typed `CommandKind` values.
-`message_action` is reachable only when the dispatcher explicitly enables
-`PreviewFeature.MESSAGE_ACTION`; raw parsing remains forward-compatible when
-it is disabled. Resource-change notifications use the separate
+`message_action` is generally available and routes without preview enrollment. Resource-change notifications use the separate
 `chattice.workspace_events.EventsRouter` and `EventsDispatcher` runtime.
 
 ## Hierarchy and traversal

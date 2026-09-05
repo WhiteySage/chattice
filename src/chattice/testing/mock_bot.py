@@ -30,6 +30,7 @@ class _MockMessages:
         request_id: str | None = None,
         message_id: str | None = None,
         timeout: float | None = None,
+        markup_syntax: Any = None,
         accessory_widgets: Any = None,
         card: Any = None,
         notify: Any = None,
@@ -44,6 +45,7 @@ class _MockMessages:
             request_id=request_id,
             message_id=message_id,
             timeout=timeout,
+            markup_syntax=markup_syntax,
             accessory_widgets=accessory_widgets,
             card=card,
             notify=notify,
@@ -127,6 +129,7 @@ class MockBot:
         request_id: str | None = None,
         message_id: str | None = None,
         timeout: float | None = None,
+        markup_syntax: Any = None,
         accessory_widgets: Any = None,
         card: Any = None,
         notify: Any = None,
@@ -152,7 +155,11 @@ class MockBot:
             )
         )
         name = f"{parent}/messages/{len(self.calls)}"
-        return Message(name=name, text=text or "")
+        message = Message(name=name, text=text or "")
+        if markup_syntax is not None:
+            self.calls[-1][1]["markup_syntax"] = markup_syntax
+            message.markup_syntax = markup_syntax
+        return message
 
     async def upload_attachment(
         self, space: Any, file: Any, *, timeout: float | None = None

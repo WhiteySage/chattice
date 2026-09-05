@@ -11,6 +11,7 @@ from collections.abc import Sequence
 from typing import Any, cast
 
 from google.apps.chat_v1.types.attachment import Attachment
+from google.apps.chat_v1.types.markup_syntax import MarkupSyntax
 from google.apps.chat_v1.types.message import (
     CardWithId,
     CreateMessageNotificationOptions,
@@ -68,6 +69,7 @@ class Messages(ResourceClient):
         space: SpaceRef | str,
         text: str | None = None,
         *,
+        markup_syntax: MarkupSyntax | None = None,
         thread: ThreadRef | None = None,
         reply_option: object = None,
         request_id: str | None = None,
@@ -221,6 +223,8 @@ class Messages(ResourceClient):
                         )
                     )
         message = Message(text=text or "")
+        if markup_syntax is not None:
+            message.markup_syntax = markup_syntax
         for entry in attached:
             message.attachment.append(entry)
         if viewer is not None:

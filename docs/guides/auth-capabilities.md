@@ -112,7 +112,7 @@ from chattice.capabilities import PreviewFeature
 
 dispatcher = Dispatcher(
     preview_features={
-        PreviewFeature.MESSAGE_ACTION,
+        PreviewFeature.REPLACE_CARDS,
         PreviewFeature.PINNED_MESSAGES,
     }
 )

@@ -8,7 +8,7 @@ and identifies the family with `CommandKind`.
 | --- | --- | --- |
 | Slash command | `router.slash_command()` | stable |
 | Quick command | `router.quick_command()` | stable |
-| Message action | `router.message_action()` | Google Developer Preview; explicit opt-in |
+| Message action | `router.message_action()` | generally available |
 
 ## Slash command
 
@@ -44,13 +44,13 @@ async def status(event: CommandEvent) -> str:
 Quick commands arrive as `APP_COMMAND` interactions with
 `appCommandMetadata`.
 
-## Message action (Preview)
+## Message action
 
 ```python
 from chattice import Dispatcher
-from chattice.capabilities import PreviewFeature
 
-dispatcher = Dispatcher(preview_features={PreviewFeature.MESSAGE_ACTION})
+dispatcher = Dispatcher()
+dispatcher.include_router(router)
 
 
 @router.message_action(F.command_id == 9)
@@ -59,9 +59,8 @@ async def summarize(event: CommandEvent) -> str:
     return f"Selected {event.target_message.name}"
 ```
 
-Without enrollment the payload remains parseable but does not reach the
-Preview observer. This is a stability gate, not proof of account enrollment,
-scope, or Google authorization.
+Message actions are generally available and route without a Preview flag.
+The legacy `PreviewFeature.MESSAGE_ACTION` value remains accepted for compatibility.
 
 ## Text filters are different
 

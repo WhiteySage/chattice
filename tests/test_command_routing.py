@@ -57,7 +57,7 @@ async def test_stable_command_kinds_have_distinct_observers() -> None:
     assert await dispatcher.feed_update(quick_event) is CommandKind.QUICK_COMMAND
 
 
-async def test_message_action_is_not_typed_without_preview_enrollment() -> None:
+async def test_message_action_routes_without_preview_enrollment() -> None:
     router = Router()
     typed_calls: list[str] = []
 
@@ -79,11 +79,11 @@ async def test_message_action_is_not_typed_without_preview_enrollment() -> None:
     dispatcher = Dispatcher()
     dispatcher.include_router(router)
 
-    assert await dispatcher.feed_update(_message_action()) == "raw"
-    assert typed_calls == []
+    assert await dispatcher.feed_update(_message_action()) == "typed"
+    assert typed_calls == ["message_action"]
 
 
-async def test_message_action_typed_routing_requires_explicit_preview() -> None:
+async def test_legacy_message_action_opt_in_remains_compatible() -> None:
     router = Router()
 
     @router.message_action()
@@ -101,22 +101,20 @@ async def test_message_action_typed_routing_requires_explicit_preview() -> None:
     assert await dispatcher.feed_update(_message_action()) == "enabled"
 
 
-async def test_caller_context_cannot_bypass_preview_enrollment() -> None:
+async def test_caller_context_cannot_replace_preview_enrollment() -> None:
     router = Router()
 
     @router.message_action()
-    async def message_action(event: CommandEvent) -> str:
+    async def message_action(
+        event: CommandEvent, preview_capabilities: PreviewCapabilities
+    ) -> str:
+        assert PreviewFeature.PINNED_MESSAGES not in preview_capabilities
         return "typed"
-
-    @router.event()
-    async def fallback(event: Event) -> str:
-        return "raw"
 
     dispatcher = Dispatcher()
     dispatcher.include_router(router)
-    forged = PreviewCapabilities({PreviewFeature.MESSAGE_ACTION})
-
+    forged = PreviewCapabilities({PreviewFeature.PINNED_MESSAGES})
     assert (
         await dispatcher.feed_update(_message_action(), preview_capabilities=forged)
-        == "raw"
+        == "typed"
     )

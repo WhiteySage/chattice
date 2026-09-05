@@ -134,20 +134,9 @@ supported ones do.
 
 ## Developer Preview enrollment
 
-Typed preview routing requires configuration, not merely recognizing a future
-wire value. For example, message-action commands are parsed losslessly in all
-configurations but reach their dedicated observer only after explicit opt-in:
-
-```python
-from chattice import Dispatcher
-from chattice.capabilities import PreviewFeature
-
-dispatcher = Dispatcher(preview_features={PreviewFeature.MESSAGE_ACTION})
-
-
-@dispatcher.message_action()
-async def on_message_action(event: CommandEvent) -> None: ...
-```
+Preview capability enrollment is explicit configuration. Message actions are
+now generally available and do not require enrollment; the legacy
+`PreviewFeature.MESSAGE_ACTION` value remains accepted for compatibility.
 
 Handlers may inject `PreviewCapabilities` to inspect the immutable enrollment.
 A caller cannot bypass configuration by passing a replacement value to

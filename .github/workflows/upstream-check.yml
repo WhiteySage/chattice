@@ -87,6 +87,7 @@ jobs:
               "google_apps_card": pypi_latest("google-apps-card"),
               "google_apps_chat": pypi_latest("google-apps-chat"),
               "google_auth": pypi_latest("google-auth"),
+              "google_cloud_pubsub": pypi_latest("google-cloud-pubsub"),
           }
           changed = [key for key in current if current[key] != baseline.get(key)]
 
