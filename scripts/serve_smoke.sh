@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+# Live development server: Google Chat -> ngrok -> localhost:8000 -> app.
+#
+# Usage:
+#   scripts/serve_smoke.sh https://xxxx.ngrok-free.app [app.module:app]
+#   CHATTICE_AUDIENCE=https://xxxx.ngrok-free.app scripts/serve_smoke.sh
+#
+# Default app is examples.bots.http_echo_bot:app; override with any module
+# that exposes a FastAPI app object, e.g.:
+#   scripts/serve_smoke.sh https://xxxx.ngrok-free.app examples.docs.quickstart_app:app
+#
+# Kills any stale listener on :8000, then starts uvicorn with PYTHONPATH=src
+# (uv run --extra can occasionally break the editable install, hence PYTHONPATH).
+
+set -euo pipefail
+
+NGROK_URL="${1:-${CHATTICE_AUDIENCE:-}}"
+if [[ -z "$NGROK_URL" ]]; then
+    echo "usage: serve_smoke.sh <ngrok-https-url> [app.module:app]" >&2
+    exit 1
+fi
+
+APP="${2:-examples.bots.http_echo_bot:app}"
+
+cd "$(dirname "$0")/.."
+
+if lsof -ti tcp:8000 >/dev/null 2>&1; then
+    echo "[serve] killing stale listener on :8000"
+    lsof -ti tcp:8000 | xargs kill -9
+    sleep 1
+fi
+
+export PYTHONPATH=src
+export CHATTICE_AUDIENCE="$NGROK_URL"
+
+exec uv run --extra fastapi uvicorn "$APP" \
+    --host 0.0.0.0 --port 8000

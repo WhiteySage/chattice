@@ -1,0 +1,46 @@
+name: Release
+
+# Trusted Publishing release pipeline; publication requires the `pypi`
+# environment approval gate on GitHub.
+#
+# Flow: exact tag -> tests -> build -> verify -> clean install -> smoke
+# -> PyPI via OIDC -> GitHub Release. Never auto-publishes on green main.
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+        with:
+          python-version: "3.11"
+          enable-cache: true
+      - run: uv sync --all-groups --locked
+      - run: uv run python scripts/gen_sbom.py --check
+      - run: uv run ruff check .
+      - run: uv run ruff format --check .
+      - run: uv run pytest --cov=chattice --cov-report=term-missing
+      - run: uv run mypy src tests
+      - run: uv run mkdocs build --strict
+      - run: uv build
+      - run: bash scripts/verify_package.sh
+      - name: Publish to PyPI (OIDC Trusted Publishing)
+        run: uv publish --trusted-publishing always
+      - name: GitHub Release
+        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
+        with:
+          files: |
+            dist/*.whl
+            dist/*.tar.gz
+          generate_release_notes: true

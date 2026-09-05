@@ -1,0 +1,10 @@
+{
+  "chat": {
+    "type": "CARD_CLICKED",
+    "user": {"name": "users/123"},
+    "space": {"name": "spaces/DM"}
+  },
+  "commonEventObject": {
+    "invokedFunction": "updateAppHome"
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "type": "CARD_CLICKED",
+  "isDialogEvent": true,
+  "dialogEventType": "CANCEL_DIALOG",
+  "common": {"invokedFunction": "contact.cancel"}
+}

@@ -1,0 +1,6 @@
+{
+  "type": "CARD_CLICKED",
+  "isDialogEvent": true,
+  "dialogEventType": "REQUEST_DIALOG",
+  "common": {"invokedFunction": "contact.open"}
+}

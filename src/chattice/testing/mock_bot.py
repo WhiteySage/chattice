@@ -1,0 +1,271 @@
+# ruff: noqa: ASYNC109 — timeout kwarg mirrors the real Bot (gapic call convention)
+"""MockBot: a call-recording stand-in for the outgoing API."""
+
+from __future__ import annotations
+
+from pathlib import Path
+from typing import Any
+
+from google.apps.chat_v1.types.message import Message
+from google.apps.chat_v1.types.space import Space
+
+from chattice.media import AttachmentRef, AttachmentSource, UploadedAttachment
+
+__all__ = ["MockBot"]
+
+
+class _MockMessages:
+    """Message resource facade over the recording methods."""
+
+    def __init__(self, bot: MockBot) -> None:
+        self._bot = bot
+
+    async def create(
+        self,
+        space: Any,
+        text: str | None = None,
+        *,
+        thread: Any = None,
+        reply_option: Any = None,
+        request_id: str | None = None,
+        message_id: str | None = None,
+        timeout: float | None = None,
+        accessory_widgets: Any = None,
+        card: Any = None,
+        notify: Any = None,
+        private_to: Any = None,
+        attachments: Any = None,
+    ) -> Message:
+        return await self._bot.send_message(
+            space,
+            text,
+            thread=thread,
+            reply_option=reply_option,
+            request_id=request_id,
+            message_id=message_id,
+            timeout=timeout,
+            accessory_widgets=accessory_widgets,
+            card=card,
+            notify=notify,
+            private_to=private_to,
+            attachments=attachments,
+        )
+
+    async def update(
+        self,
+        name: str,
+        text: str | None = None,
+        *,
+        card: Any = None,
+        timeout: float | None = None,
+    ) -> Message:
+        return await self._bot.update_message(name, text, card=card, timeout=timeout)
+
+    async def get(self, name: str, *, timeout: float | None = None) -> Message:
+        return await self._bot.get_message(name, timeout=timeout)
+
+    async def delete(self, name: str, *, timeout: float | None = None) -> None:
+        return await self._bot.delete_message(name, timeout=timeout)
+
+
+class _MockSpaces:
+    """Space resource facade over the recording methods."""
+
+    def __init__(self, bot: MockBot) -> None:
+        self._bot = bot
+
+    async def get(self, name: str, *, timeout: float | None = None) -> Space:
+        return await self._bot.get_space(name, timeout=timeout)
+
+
+class _MockIdentity:
+    """Identity namespace mirroring ``Bot.app`` / ``Bot.user``.
+
+    MockBot does not model auth: both namespaces expose the same recorder.
+    """
+
+    def __init__(self, bot: MockBot) -> None:
+        self._bot = bot
+
+    @property
+    def messages(self) -> _MockMessages:
+        return _MockMessages(self._bot)
+
+    @property
+    def spaces(self) -> _MockSpaces:
+        return _MockSpaces(self._bot)
+
+
+class MockBot:
+    """Records outgoing calls and fabricates SDK proto responses.
+
+    No transport, no network. Handlers call the same facade as the real
+    client (``bot.app.messages.create(...)``, DI-compatible: handlers
+    receive it by name (``feed_update(event, bot=mock_bot)``)). Recorded
+    call kinds are the recording layer's names (``send_message``,
+    ``update_message``); subclasses may override those recorders.
+    """
+
+    def __init__(self) -> None:
+        self.calls: list[tuple[str, dict[str, Any]]] = []
+
+    @property
+    def app(self) -> _MockIdentity:
+        return _MockIdentity(self)
+
+    @property
+    def user(self) -> _MockIdentity:
+        return _MockIdentity(self)
+
+    async def send_message(
+        self,
+        space: Any,
+        text: str | None = None,
+        *,
+        thread: Any = None,
+        reply_option: Any = None,
+        request_id: str | None = None,
+        message_id: str | None = None,
+        timeout: float | None = None,
+        accessory_widgets: Any = None,
+        card: Any = None,
+        notify: Any = None,
+        private_to: Any = None,
+        attachments: Any = None,
+    ) -> Message:
+        parent = space if isinstance(space, str) else space.name
+        self.calls.append(
+            (
+                "send_message",
+                {
+                    "space": parent,
+                    "text": text,
+                    "card": card.to_dict() if card is not None else None,
+                    "notify": notify,
+                    "private_to": (
+                        private_to.name if hasattr(private_to, "name") else private_to
+                    ),
+                    "attachments": (
+                        [a.filename for a in attachments] if attachments else None
+                    ),
+                },
+            )
+        )
+        name = f"{parent}/messages/{len(self.calls)}"
+        return Message(name=name, text=text or "")
+
+    async def upload_attachment(
+        self, space: Any, file: Any, *, timeout: float | None = None
+    ) -> UploadedAttachment:
+        parent = space if isinstance(space, str) else space.name
+        self.calls.append(
+            (
+                "upload_attachment",
+                {"space": parent, "filename": file.filename},
+            )
+        )
+        return UploadedAttachment(
+            space=parent,
+            filename=file.filename,
+            attachment_data_ref={
+                "resourceName": (f"{parent}/attachments/upload/{len(self.calls)}")
+            },
+        )
+
+    async def download_attachment(
+        self,
+        attachment: Any,
+        *,
+        destination: str | Path | None = None,
+        timeout: float | None = None,
+    ) -> bytes | Path:
+        name = (
+            attachment.resource_name
+            if hasattr(attachment, "resource_name")
+            else str(attachment)
+        )
+        self.calls.append(("download_attachment", {"resource_name": name}))
+        if destination is None:
+            return b""
+        path = Path(destination)
+        path.write_bytes(b"")  # noqa: ASYNC240 — test stub, no real I/O guard
+        return path
+
+    async def get_attachment(
+        self, name: str, *, timeout: float | None = None
+    ) -> AttachmentRef:
+        self.calls.append(("get_attachment", {"name": name}))
+        return AttachmentRef(
+            name=name,
+            source=AttachmentSource.UPLOADED_CONTENT,
+            attachment_data_ref={"resourceName": name},
+        )
+
+    async def get_message(self, name: str, *, timeout: float | None = None) -> Message:
+        self.calls.append(("get_message", {"name": name}))
+        return Message(name=name, text="")
+
+    async def update_message(
+        self,
+        name: str,
+        text: str | None = None,
+        *,
+        card: Any = None,
+        timeout: float | None = None,
+    ) -> Message:
+        # Mirrors the real messages.update(name, text=None, *, card=...):
+        # the card path records the card payload (the mirror must stay
+        # in sync with the real client, including card=).
+        self.calls.append(
+            (
+                "update_message",
+                {
+                    "name": name,
+                    "text": text,
+                    "card": card.to_dict() if card is not None else None,
+                },
+            )
+        )
+        return Message(name=name, text=text or "")
+
+    async def delete_message(self, name: str, *, timeout: float | None = None) -> None:
+        self.calls.append(("delete_message", {"name": name}))
+
+    async def get_space(self, name: str, *, timeout: float | None = None) -> Space:
+        self.calls.append(("get_space", {"name": name}))
+        return Space(name=name)
+
+    def _sent_texts(self) -> list[str]:
+        return [
+            args["text"] or "" for kind, args in self.calls if kind == "send_message"
+        ]
+
+    def assert_message_sent(self, text: str | None = None, *, count: int = 1) -> None:
+        """Assert send_message was called `count` times (optionally with text)."""
+        sent = self._sent_texts()
+        if len(sent) != count:
+            raise AssertionError(
+                f"expected {count} sent message(s), got {len(sent)}: {sent!r}"
+            )
+        if text is not None and sent != [text] * count:
+            raise AssertionError(f"expected sent text {text!r} x{count}, got {sent!r}")
+
+    def assert_updated(self, name: str, text: str) -> None:
+        """Assert update_message was called with the given name/text."""
+        for kind, args in self.calls:
+            if (
+                kind == "update_message"
+                and args.get("name") == name
+                and args.get("text") == text
+            ):
+                return
+        raise AssertionError(
+            f"expected update_message({name!r}, {text!r}), "
+            f"calls: {[(k, a) for k, a in self.calls if k == 'update_message']!r}"
+        )
+
+    def assert_no_messages(self) -> None:
+        """Assert nothing was sent."""
+        sent = self._sent_texts()
+        if sent:
+            raise AssertionError(f"expected no sent messages, got {sent!r}")

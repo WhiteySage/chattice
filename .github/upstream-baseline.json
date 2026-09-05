@@ -1,0 +1,7 @@
+{
+  "chat_discovery_sha256": "986677b3213bfa95dc9042b1e745d82bc85af4cf615601a8d19e9451bdc17a48",
+  "chat_release_feed_sha256": "97ffdeb5908afe04719f9c7c8ddfb920f73aabd7835c7ffc7316b63a794ce7da",
+  "google_apps_card": "0.7.0",
+  "google_apps_chat": "0.10.5",
+  "google_auth": "2.57.0"
+}
