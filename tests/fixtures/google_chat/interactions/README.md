@@ -30,7 +30,7 @@ Per-fixture derivation:
 | `widget_updated.json` | Minimized Event/EventType `WIDGET_UPDATED` shape with documented associated CommonEventObject action metadata. |
 | `app_command.json` | Minimized Event `AppCommandMetadata` JSON schema for a documented **QUICK_COMMAND** (numeric command ID, `QUICK_COMMAND` type). |
 | `slash_command.json` | Documented slash-command shape from the [command guide](https://developers.google.com/workspace/chat/commands): `MESSAGE` + `message.slashCommand.commandId` (int64 string) + `argumentText` + `message.sender.type`, using placeholder values. |
-| `message_action.json` | Minimized Developer Preview message-action example from the [command guide](https://developers.google.com/workspace/chat/commands): `APP_COMMAND` + `appCommandMetadata.MESSAGE_ACTION` + the target `message`, using placeholder values. |
+| `message_action.json` | Minimized message-action example from the [command guide](https://developers.google.com/workspace/chat/commands): `APP_COMMAND` + `appCommandMetadata.MESSAGE_ACTION` + the target `message`, using placeholder values. |
 | `message_matched_url.json` | Documented link-preview shape from the [link preview guide](https://developers.google.com/workspace/chat/preview-links): `MESSAGE` + `message.matchedUrl.url` + `message.sender.type`, using placeholder values. |
 | `card_clicked_human_message.json` | Documented `CARD_CLICKED` with `message.sender.type = HUMAN` (sender-aware response rule source), using placeholder values. |
 | `app_home.json` | Minimized official Python App Home HTTP envelope (`event['chat']['type']`) plus EventType's documented user/space fields inside the Chat sub-event. |

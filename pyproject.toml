@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "chattice"
-version = "0.3.4"
+version = "0.3.5"
 description = "Async typed event framework for Google Chat apps"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -31,7 +31,7 @@ classifiers = [
   "Typing :: Typed",
 ]
 dependencies = [
-  "google-apps-chat>=0.10.4,<1.0.0",
+  "google-apps-chat>=0.10.5,<1.0.0",
   "google-auth>=2.30,<3",
   "pydantic>=2.10,<3.0",
 ]

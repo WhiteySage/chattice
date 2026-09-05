@@ -224,9 +224,8 @@ def test_slash_command_non_integer_command_id_is_rejected() -> None:
         )
 
 
-def test_message_action_preserves_preview_kind_and_target_message() -> None:
-    """MESSAGE_ACTION is a Developer Preview APP_COMMAND type — accepted,
-    marked by source kind, not advertised as stable."""
+def test_message_action_preserves_kind_and_target_message() -> None:
+    """MESSAGE_ACTION retains its command kind and selected message."""
     event = parse_interaction(load_fixture("message_action.json"))
     assert isinstance(event, CommandEvent)
     assert event.source_kind == "MESSAGE_ACTION"

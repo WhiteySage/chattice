@@ -94,7 +94,8 @@ policy. Application code may choose to treat that as a skip for a bulk job.
 
 `spaces.list()` uses APP authentication with `chat.bot` and yields (a
 `Pager`) the Spaces in which the calling Chat app is a member. It does not use
-the administrator-only `spaces.search()` API.
+`spaces.search()`, which also supports searching the calling user's spaces
+without administrator privileges. Use the raw SDK for search.
 
 ```python
 from chattice.client import (

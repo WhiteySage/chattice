@@ -15,7 +15,7 @@ fail authorization.
 ## Parsing native commands as message text
 
 Configure commands in the Chat API and route `CommandEvent.command_id` through
-`slash_command`, `quick_command`, or Preview-gated `message_action` observers.
+`slash_command`, `quick_command`, or `message_action` observers.
 
 ## Treating a card action as CallbackQuery
 

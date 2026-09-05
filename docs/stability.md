@@ -1,6 +1,6 @@
 # Pre-1.0 stability
 
-Current package: Chattice 0.3.4.
+Current package: Chattice 0.3.5.
 
 ## Stable public surface
 
@@ -27,7 +27,7 @@ Google Developer Preview features are also explicitly opted into, for example:
 from chattice import Dispatcher
 from chattice.capabilities import PreviewFeature
 
-dispatcher = Dispatcher(preview_features={PreviewFeature.MESSAGE_ACTION})
+dispatcher = Dispatcher(preview_features={PreviewFeature.REPLACE_CARDS})
 ```
 
 The stable preview gate does not make Google's preview feature stable.

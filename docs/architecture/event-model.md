@@ -61,11 +61,11 @@ I/O. No attachment or reaction write service is implied.
 - quick commands: `APP_COMMAND` plus `appCommandMetadata` →
   `QUICK_COMMAND`;
 - message actions: the same `APP_COMMAND` envelope → `MESSAGE_ACTION`
-  (Developer Preview and routed only after explicit enrollment).
+  (generally available, with no preview enrollment required).
 
 The compatibility `source_kind` string remains available for callers
 and unknown/mismatched values. `@router.command` remains the shared observer;
-`slash_command`, `quick_command`, and the preview-gated `message_action`
+`slash_command`, `quick_command`, and `message_action`
 observers make kind-specific routing explicit.
 
 `ActionSource` is evidence-based: dialog metadata proves `DIALOG`, the wrapped

@@ -37,7 +37,7 @@ Under **Commands**, add a command:
 
 Save again. The ID, not the display text, is the durable routing key in
 Chattice. The official command guide documents slash commands, quick commands,
-and Developer Preview message actions:
+and message actions:
 [Respond to Google Chat app commands](https://developers.google.com/workspace/chat/commands).
 
 ## App Home and dialogs

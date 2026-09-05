@@ -408,8 +408,6 @@ class Dispatcher(Router):
             return ("action",)
         if isinstance(event, CommandEvent):
             if event.kind is CommandKind.MESSAGE_ACTION:
-                if PreviewFeature.MESSAGE_ACTION not in self._preview_capabilities:
-                    return ()
                 return ("message_action", "command")
             if event.kind is CommandKind.SLASH_COMMAND:
                 return ("slash_command", "command")

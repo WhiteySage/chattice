@@ -167,3 +167,46 @@ async def test_app_auth_card_allowed() -> None:
     transport = FakeChatTransport()
     await _bot(transport).app.messages.create("spaces/AAA", card=_card())
     assert len(transport.requests[-1].message.cards_v2) == 1
+
+
+@pytest.mark.parametrize("auth_mode", [AuthMode.APP, AuthMode.USER])
+@pytest.mark.parametrize("markdown", [False, True])
+async def test_message_markup_syntax_reaches_transport(
+    auth_mode: AuthMode, markdown: bool
+) -> None:
+    from google.apps.chat_v1.types.markup_syntax import MarkupSyntax
+
+    transport = FakeChatTransport()
+
+    class UserCredentials(AnonymousCredentials):
+        refresh_token = "test-refresh-token"
+
+    bot = Bot(
+        app_credentials_provider=_creds,
+        user_credentials_provider=lambda: UserCredentials(),  # type: ignore[no-untyped-call]
+        transport=transport,
+    )
+    syntax = MarkupSyntax
+    selected = MarkupSyntax(syntax.MARKUP_SYNTAX_MARKDOWN) if markdown else None
+    resource = bot.app.messages if auth_mode is AuthMode.APP else bot.user.messages
+    await resource.create("spaces/AAA", text="**Hello**", markup_syntax=selected)
+    message = transport.requests[-1].message
+    assert message.text == "**Hello**"
+    assert message.markup_syntax == (
+        syntax.MARKUP_SYNTAX_MARKDOWN if markdown else syntax.MARKUP_SYNTAX_UNSPECIFIED
+    )
+
+
+async def test_mock_bot_records_markup_syntax() -> None:
+    from google.apps.chat_v1.types.markup_syntax import MarkupSyntax
+
+    from chattice.testing import MockBot
+
+    bot = MockBot()
+    message = await bot.app.messages.create(
+        "spaces/AAA",
+        text="**Hello**",
+        markup_syntax=MarkupSyntax.MARKUP_SYNTAX_MARKDOWN,
+    )
+    assert message.markup_syntax == MarkupSyntax.MARKUP_SYNTAX_MARKDOWN
+    assert bot.calls[-1][1]["markup_syntax"] == MarkupSyntax.MARKUP_SYNTAX_MARKDOWN

@@ -4,6 +4,23 @@ All notable changes are documented here. Versions follow Python packaging
 conventions. Before 1.0, incompatible changes may be released in a minor
 version and will include upgrade notes.
 
+## [0.3.5] — Google API compatibility
+
+### Changed
+
+- Message actions route without preview enrollment following general availability.
+  The existing `PreviewFeature.MESSAGE_ACTION` value remains accepted.
+- Update Google Auth to 2.57.1 and Pub/Sub to 2.40.0 in the dependency lock.
+- Include Pub/Sub releases in the daily upstream monitor.
+
+### Added
+
+- `markup_syntax` on message creation selects Google's standard Markdown syntax.
+
+### Fixed
+
+- Describe user-scoped space search without requiring administrator privileges.
+
 ## [0.3.4] — Examples and documentation corrections
 
 ### Fixed

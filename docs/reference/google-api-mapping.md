@@ -27,7 +27,7 @@ never prevents access to the official client or raw payload.
 | `FormInputs` / `FormModel` | `common.formInputs` | surface-specific response | `event.raw` |
 | `Dialog` | `actionResponse.type=DIALOG` | eligible HTTP interaction only | raw response mapping |
 | `AppHomeEvent` | App Home RenderActions | HTTP-only configured surface | `event.raw` |
-| `CommandEvent` | slash `MESSAGE` / `APP_COMMAND` | numeric configured ID; message action Preview | `event.raw` |
+| `CommandEvent` | slash `MESSAGE` / `APP_COMMAND` | numeric configured ID; message actions generally available | `event.raw` |
 | `WorkspaceEvent` | Google Workspace Events CloudEvent | subscription identity/scopes | `event.data`, envelope parser |
 
 Typed Card facades map to Google Cards v2 protos from `google-apps-card`.

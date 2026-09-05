@@ -124,3 +124,22 @@ All curated calls flow through ONE execution path:
 resource client -> OperationExecutor -> OperationRegistry preflight ->
 explicit APP/USER GAPIC client. Google API errors arrive as the curated
 `Chat*Error` family; other exceptions pass through untouched.
+
+## Standard Markdown messages
+
+Use the official enum to select standard Markdown for asynchronous messages:
+
+```python
+from google.apps.chat_v1.types.markup_syntax import MarkupSyntax
+
+await bot.app.messages.create(
+    "spaces/AAA",
+    text="**Deployment complete**",
+    markup_syntax=MarkupSyntax.MARKUP_SYNTAX_MARKDOWN,
+)
+```
+
+Omitting `markup_syntax` preserves Google's default formatting. This parameter
+applies to the message body, not card widgets or synchronous interaction responses.
+Citations and footer sources remain Google Developer Preview features and are
+not exposed by this facade or the pinned SDK's Message model.
