@@ -184,7 +184,7 @@ Runnable examples live in [`examples/`](https://github.com/WhiteySage/chattice/t
 
 ## Status
 
-Pre-1.0 **public release** (current version 0.3.3) — see
+Pre-1.0 **public release** (current version 0.3.3.4) — see
 [CHANGELOG](CHANGELOG.md). The documented public
 surface is the compatibility baseline: patch releases preserve it; pre-1.0
 incompatible changes require a minor-version bump and upgrade notes. `chattice.experimental`

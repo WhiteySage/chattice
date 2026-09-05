@@ -1,6 +1,6 @@
 # Pre-1.0 stability
 
-Current package: Chattice 0.3.3.
+Current package: Chattice 0.3.3.4.
 
 ## Stable public surface
 

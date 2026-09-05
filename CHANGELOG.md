@@ -1,8 +1,21 @@
 # Changelog
 
-All notable changes are documented here. The project follows Semantic
-Versioning. Before 1.0, incompatible changes may be released in a minor
+All notable changes are documented here. Versions follow Python packaging
+conventions. Before 1.0, incompatible changes may be released in a minor
 version and will include upgrade notes.
+
+## [0.3.3.4] — Examples and documentation corrections
+
+### Fixed
+
+- Pub/Sub examples configure subscriber credentials separately and close bot clients reliably.
+- Message filters and conversation examples handle mentions and invalid input consistently.
+- Documentation reflects current transport, membership, media, and dialog APIs.
+- Release metadata and the dependency inventory match the package version.
+
+### Added
+
+- Executable documentation examples and scenario tests for the example applications.
 
 ## [0.3.3] — Test hardening and aiogram-mirroring examples
 
