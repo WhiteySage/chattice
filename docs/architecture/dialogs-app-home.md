@@ -177,7 +177,7 @@ serializes what the docs allow, so keep the platform rules in mind:
   only permitted when the message sender type is `BOT`. Updating cards on
   human messages uses `UPDATE_USER_MESSAGE_CARDS` (implemented,
   sender-derived) — see [cards](cards.md).
-- **App Home is configured separately.** The Home tab URL must be set in the
-  Google Chat app configuration (Apps Script / Cloud Console); the framework
-  only serves the endpoint once traffic reaches it. App Home interactions
+- **App Home is configured separately.** Enable App Home in the Google Chat
+  API configuration in Google Cloud. The framework only serves the configured
+  HTTP endpoint once traffic reaches it. App Home interactions
   carry a private DM `space` and are only sent to the individual user.
